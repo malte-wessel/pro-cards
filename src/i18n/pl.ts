@@ -791,6 +791,8 @@ const pl: Translation = {
   "editor.card.field.visual_bucket": "Przedział",
   "editor.card.field.visual_smoothing": "Wygładzanie",
   "editor.card.field.visual_axis": "Osie",
+  "editor.card.field.visual_min": "Dół skali",
+  "editor.card.field.visual_max": "Góra skali",
   "editor.card.field.visual_src": "Źródło",
   "editor.card.field.visual_opacity": "Krycie",
   "editor.card.field.visual_tint": "Zabarwienie",
@@ -894,6 +896,10 @@ const pl: Translation = {
   "editor.card.help.visual_src": "Historia innej encji. Puste: tej karty",
   "editor.card.help.visual_opacity": "Jak bardzo prześwituje obraz",
   "editor.card.help.visual_bucket": "Minuty na kolumnę lub blok",
+  "editor.card.help.visual_min":
+    "Niższe wartości poszerzają skalę. Puste: minimum karty, w przeciwnym razie danych",
+  "editor.card.help.visual_max":
+    "Wyższe wartości poszerzają skalę. Puste: maksimum karty, w przeciwnym razie danych",
   "editor.card.help.status": "Tekst lub szablon. Puste: status rodzaju lub pasującej reguły",
   "editor.card.help.rules":
     "Pierwsza pasująca reguła zmienia wygląd: kolor, ikonę, status i więcej",

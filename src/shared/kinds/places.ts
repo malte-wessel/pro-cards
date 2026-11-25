@@ -92,6 +92,9 @@ export interface VisualPlace {
   bucket?: number;
   axis?: boolean;
   smoothing?: number;
+  // a plot's scale: its bottom and top (soft, data beyond them widens it)
+  min?: number;
+  max?: number;
 }
 // a place as written: left out (undefined), none (false) or its thing
 export type Written<P> = P | false | undefined;
@@ -110,8 +113,8 @@ export const VISUAL_OPTIONS: Record<VisualThing, readonly string[]> = {
   glow: [],
   image: ["src", "opacity", "tint", "blur"],
   flow: ["variant"],
-  sparkline: [...PLOT, "axis", "smoothing"],
-  columns: [...PLOT, "axis"],
+  sparkline: [...PLOT, "axis", "smoothing", "min", "max"],
+  columns: [...PLOT, "axis", "min", "max"],
   strip: [...PLOT, "variant"],
   bar: [],
   gauge: [],
@@ -134,6 +137,8 @@ const DATA_OPTIONS = [
   "hold_action",
   "double_tap_action",
 ];
+// nor a plot's scale: a scale that changed with the state would make the plot jump
+const SCALE_OPTIONS = ["min", "max"];
 // the blur of a picture behind the card that says `blur: true`, and of the kind's own photo
 export const IMAGE_BLUR = 20;
 
@@ -169,6 +174,10 @@ const optionOf = (k: string, v: unknown, at: string): unknown => {
       if (v === "today") return v;
       if (typeof v !== "number" || !(v > 0)) fail("must be a number of hours or today");
       return v;
+    case "min":
+    case "max":
+      if (typeof v !== "number" || !Number.isFinite(v)) fail("must be a number");
+      return v;
     case "bucket":
     case "smoothing":
       if (typeof v !== "number" || !(v >= 5)) fail("must be a number of minutes, at least 5");
@@ -201,6 +210,8 @@ export const optionsOf = (
           ? `${at}: ${thing} takes ${allowed.length ? list(allowed) : "no options"}, not ${k}`
           : `${at}: ${k} is no option here (${list(allowed)})`,
       );
+    if (rule && SCALE_OPTIONS.includes(k))
+      throw new Error(`${at}: a rule sets no ${k} (the plot's scale is the card's)`);
     if (rule && DATA_OPTIONS.includes(k))
       throw new Error(
         `${at}: a rule sets no ${k} (it is the card's: ${k.endsWith("_action") ? "a rule changes the look, not what a tap does" : "a rule must not fetch history"})`,
@@ -260,6 +271,8 @@ export const parseVisual = (raw: unknown, at: string, rule = false): Written<Vis
     throw new Error(`${at}: a strip's variant is one of ${list(STRIP_VARIANTS)}`);
   if (type === "schedule" && opts.variant !== undefined && !oneOf(SCHEDULE_VARIANTS, opts.variant))
     throw new Error(`${at}: a schedule's variant is one of ${list(SCHEDULE_VARIANTS)}`);
+  if (opts.min !== undefined && opts.max !== undefined && !(opts.min < opts.max))
+    throw new Error(`${at}: min must be below max`);
   if (rule && opts.src !== undefined && type && HISTORY_THINGS.includes(type))
     throw new Error(`${at}: a rule sets no src of a plot (it is the card's history)`);
   return type ? { type, ...opts } : opts;

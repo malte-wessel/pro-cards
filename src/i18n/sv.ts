@@ -786,6 +786,8 @@ const sv: Translation = {
   "editor.card.field.visual_bucket": "Intervall",
   "editor.card.field.visual_smoothing": "Utjämning",
   "editor.card.field.visual_axis": "Axlar",
+  "editor.card.field.visual_min": "Skalans botten",
+  "editor.card.field.visual_max": "Skalans topp",
   "editor.card.field.visual_src": "Källa",
   "editor.card.field.visual_opacity": "Opacitet",
   "editor.card.field.visual_tint": "Färgton",
@@ -889,6 +891,8 @@ const sv: Translation = {
   "editor.card.help.visual_src": "En annan entitets historik. Tomt: detta korts",
   "editor.card.help.visual_opacity": "Hur mycket av bilden som syns igenom",
   "editor.card.help.visual_bucket": "Minuter per stapel eller block",
+  "editor.card.help.visual_min": "Lägre värden vidgar skalan. Tomt: kortets minimum, annars datans",
+  "editor.card.help.visual_max": "Högre värden vidgar skalan. Tomt: kortets maximum, annars datans",
   "editor.card.help.status": "En text eller en mall. Tomt: typens eller den matchande regelns",
   "editor.card.help.rules":
     "Den första regeln som passar ändrar utseendet: färgen, ikonen, statusen med mera",

@@ -787,6 +787,8 @@ const de: Translation = {
   "editor.card.field.visual_bucket": "Intervall",
   "editor.card.field.visual_smoothing": "Glättung",
   "editor.card.field.visual_axis": "Achsen",
+  "editor.card.field.visual_min": "Skala unten",
+  "editor.card.field.visual_max": "Skala oben",
   "editor.card.field.visual_src": "Quelle",
   "editor.card.field.visual_opacity": "Deckkraft",
   "editor.card.field.visual_tint": "Einfärben",
@@ -891,6 +893,10 @@ const de: Translation = {
     "Der Verlauf einer anderen Entität. Leer: der Verlauf dieser Karte",
   "editor.card.help.visual_opacity": "Wie viel vom Bild durchscheint",
   "editor.card.help.visual_bucket": "Minuten je Säule oder Block",
+  "editor.card.help.visual_min":
+    "Kleinere Werte erweitern die Skala. Leer: das Minimum der Karte, sonst das der Daten",
+  "editor.card.help.visual_max":
+    "Größere Werte erweitern die Skala. Leer: das Maximum der Karte, sonst das der Daten",
   "editor.card.help.status":
     "Ein Text oder ein Template. Leer: der Status der Art oder der passenden Regel",
   "editor.card.help.rules":

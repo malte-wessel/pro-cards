@@ -8,6 +8,7 @@ import {
   lineBuckets,
   lineMeans,
   normalizeSmoothing,
+  plotScale,
   pointOf,
   trendOf,
 } from "../../../src/shared/history.ts";
@@ -181,6 +182,90 @@ describe("history helpers", () => {
         1,
       ),
     ).rejects.toThrow("x");
+  });
+});
+
+describe("plotScale", () => {
+  it("fits the data without limits, as a line and as columns", () => {
+    // a line: the data's edges, a tenth of the range around them
+    expect(plotScale([10, 20], {}, false, 0.1)).toEqual({
+      lo: 9,
+      hi: 21,
+      top: 20,
+      bottom: 10,
+      base: 9,
+      fixed: false,
+    });
+    // a flat line sits in a range of 2
+    expect(plotScale([5, 5], {}, false, 0.1)).toMatchObject({ top: 6, bottom: 4 });
+    // columns: from 0 to the highest bucket, growing from 0
+    expect(plotScale([3, 17], {}, true, 0)).toEqual({
+      lo: 0,
+      hi: 17,
+      top: 17,
+      bottom: 0,
+      base: 0,
+      fixed: false,
+    });
+    expect(plotScale([-4, 6], {}, true, 0)).toMatchObject({ lo: -4, hi: 6, base: 0 });
+    // a row of zeros: a range of 1, its axis still names 0
+    expect(plotScale([0, 0], {}, true, 0)).toMatchObject({ lo: 0, hi: 1, top: 0 });
+  });
+
+  it("takes a written limit as that side's edge, without padding", () => {
+    expect(plotScale([3, 17], { max: 100 }, true, 0)).toMatchObject({
+      lo: 0,
+      hi: 100,
+      top: 100,
+      fixed: true,
+    });
+    // a line: the written side exact, the other fitted and padded
+    expect(plotScale([10, 20], { max: 40 }, false, 0.1)).toMatchObject({
+      lo: 7,
+      hi: 40,
+      top: 40,
+      bottom: 10,
+    });
+    expect(plotScale([10, 20], { min: 0 }, false, 0.1)).toMatchObject({
+      lo: 0,
+      hi: 22,
+      bottom: 0,
+      top: 20,
+    });
+    expect(plotScale([10, 20], { min: 0, max: 50 }, false, 0.1)).toMatchObject({
+      lo: 0,
+      hi: 50,
+    });
+  });
+
+  it("keeps a written limit when the data is flat at it", () => {
+    // a solar line at night, flat at its written floor: on the floor, the axis naming 0
+    expect(plotScale([0, 0, 0], { min: 0 }, false, 0.1)).toMatchObject({
+      lo: 0,
+      bottom: 0,
+      top: 2,
+    });
+    expect(plotScale([100, 100], { max: 100 }, false, 0.1)).toMatchObject({ hi: 100, top: 100 });
+    expect(plotScale([5, 5], { min: 5 }, true, 0)).toMatchObject({ lo: 5, hi: 6, base: 5 });
+  });
+
+  it("widens the scale for data beyond a limit, nothing cut off", () => {
+    expect(plotScale([20, 55], { max: 40 }, true, 0)).toMatchObject({ hi: 55, top: 55 });
+    expect(plotScale([5, 20], { min: 10 }, false, 0.1)).toMatchObject({ lo: 5, bottom: 5 });
+  });
+
+  it("grows columns from a min above 0", () => {
+    expect(plotScale([40, 60], { min: 30 }, true, 0)).toMatchObject({
+      lo: 30,
+      hi: 60,
+      base: 30,
+      fixed: true,
+    });
+    expect(plotScale([40, 60], { min: 30, max: 100 }, true, 0)).toMatchObject({
+      lo: 30,
+      hi: 100,
+      base: 30,
+    });
   });
 });
 

@@ -244,6 +244,20 @@ describe("parseVisual", () => {
     expect(() => visual({ type: "sparkline", smoothing: "1h" })).toThrow(
       "visual: smoothing must be a number of minutes, at least 5",
     );
+    // a plot's scale
+    expect(visual({ type: "columns", min: 0, max: 100 })).toEqual({
+      type: "columns",
+      min: 0,
+      max: 100,
+    });
+    expect(visual({ type: "sparkline", min: -5 })).toEqual({ type: "sparkline", min: -5 });
+    expect(() => visual({ type: "columns", max: "100" })).toThrow("visual: max must be a number");
+    expect(() => visual({ type: "columns", min: 50, max: 50 })).toThrow(
+      "visual: min must be below max",
+    );
+    expect(() => visual({ type: "strip", max: 100 })).toThrow(
+      "visual: strip takes hours, bucket, src, variant, not max",
+    );
     // a visual has no style: a flow's drawing is its variant, a cover's too
     expect(() => visual({ type: "flow", style: "lines" })).toThrow(
       "visual: flow takes variant, not style",
@@ -278,6 +292,10 @@ describe("parseVisual", () => {
         `rules[0].visual: a rule sets no ${k} (it is the card's: a rule must not fetch history)`,
       );
     expect(() => rule({ hours: 6 })).toThrow("a rule sets no hours");
+    for (const k of ["min", "max"])
+      expect(() => rule({ type: "columns", [k]: 10 })).toThrow(
+        `rules[0].visual: a rule sets no ${k} (the plot's scale is the card's)`,
+      );
     for (const type of ["sparkline", "columns", "strip"])
       expect(() => rule({ type, src: "sensor.x" })).toThrow(
         "rules[0].visual: a rule sets no src of a plot (it is the card's history)",
@@ -515,7 +533,7 @@ describe("options that do nothing", () => {
   it("checks a rule against the card's places, merged onto the kind's", () => {
     const sparkline = { visual: { type: "sparkline" } };
     expect(idle(light, sparkline, [{ visual: { opacity: 0.3 } }])).toEqual([
-      "C: rules[0].visual: the card's visual is sparkline, which takes hours, bucket, src, axis, smoothing, not opacity (name the thing that does: visual: { type: image, opacity: … })",
+      "C: rules[0].visual: the card's visual is sparkline, which takes hours, bucket, src, axis, smoothing, min, max, not opacity (name the thing that does: visual: { type: image, opacity: … })",
     ]);
     expect(idle(light, { visual: false }, [{ visual: { axis: true } }])[0]).toMatch(
       /^C: rules\[0\]\.visual: the card draws no visual, so axis has nothing to change/,

@@ -786,6 +786,8 @@ const cs: Translation = {
   "editor.card.field.visual_bucket": "Interval",
   "editor.card.field.visual_smoothing": "Vyhlazení",
   "editor.card.field.visual_axis": "Osy",
+  "editor.card.field.visual_min": "Spodek stupnice",
+  "editor.card.field.visual_max": "Vrchol stupnice",
   "editor.card.field.visual_src": "Zdroj",
   "editor.card.field.visual_opacity": "Krytí",
   "editor.card.field.visual_tint": "Zabarvení",
@@ -889,6 +891,10 @@ const cs: Translation = {
   "editor.card.help.visual_src": "Historie jiné entity. Prázdné: entita této karty",
   "editor.card.help.visual_opacity": "Jak moc obrázek prosvítá",
   "editor.card.help.visual_bucket": "Minuty na sloupec nebo blok",
+  "editor.card.help.visual_min":
+    "Nižší hodnoty stupnici rozšíří. Prázdné: minimum karty, jinak dat",
+  "editor.card.help.visual_max":
+    "Vyšší hodnoty stupnici rozšíří. Prázdné: maximum karty, jinak dat",
   "editor.card.help.status": "Text nebo šablona. Prázdné: stav druhu nebo odpovídajícího pravidla",
   "editor.card.help.rules": "První odpovídající pravidlo mění vzhled: barvu, ikonu, stav a další",
   "editor.card.help.badges":

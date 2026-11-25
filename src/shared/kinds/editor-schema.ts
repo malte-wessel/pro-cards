@@ -1120,6 +1120,14 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           ),
         ]
       : []),
+    ...(takes.includes("min")
+      ? [
+          grid(
+            { name: "visual_min", selector: { number: { mode: "box" } } },
+            { name: "visual_max", selector: { number: { mode: "box" } } },
+          ),
+        ]
+      : []),
     ...(takes.includes("axis") ? [{ name: "visual_axis", selector: { boolean: {} } }] : []),
     ...(takes.includes("src") && visualThing !== "image"
       ? [{ name: "visual_src", selector: { entity: {} } }]

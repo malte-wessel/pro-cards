@@ -299,6 +299,21 @@ describe("the editor form: the visual", () => {
     expect(
       edit(LIGHT, { visual_thing: "sparkline", visual_smoothing: 10, visual_bucket: 15 }),
     ).toEqual({ ...LIGHT, visual: { type: "sparkline", bucket: 15, smoothing: 10 } });
+    // a plot's scale; a strip has none
+    expect(edit(LIGHT, { visual_thing: "columns", visual_max: 100 })).toEqual({
+      ...LIGHT,
+      visual: { type: "columns", max: 100 },
+    });
+    const scaled = { ...LIGHT, visual: { type: "columns", min: 10, max: 100 } };
+    expect(formOf(scaled)).toMatchObject({ visual_min: 10, visual_max: 100 });
+    expect(edit(scaled, { visual_min: undefined })).toEqual({
+      ...LIGHT,
+      visual: { type: "columns", max: 100 },
+    });
+    expect(edit(LIGHT, { visual_thing: "strip", visual_max: 100 })).toEqual({
+      ...LIGHT,
+      visual: "strip",
+    });
     expect(
       edit(LIGHT, { visual_thing: "strip", visual_src: "sensor.living_room_temperature" }),
     ).toEqual({ ...LIGHT, visual: { type: "strip", src: "sensor.living_room_temperature" } });

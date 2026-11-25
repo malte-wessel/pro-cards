@@ -187,6 +187,60 @@ export const lineMeans = (
   }
   return out;
 };
+// A plot's vertical scale. `top` and `bottom` are the values its axis names: a written limit, or
+// the data's edge where a side has none (soft: data beyond a limit widens the scale, nothing is
+// cut). `lo` and `hi` are the range it is drawn over: `pad` (a share of the range) only on a
+// fitted side, a flat window widened. `zero`: the columns, whose fitted scale holds 0 and which
+// grow from `base`, 0 inside the scale (a written min above 0 is the base). `fixed`: a limit was
+// written, so the columns' brightness follows the scale rather than the window's peak.
+export interface PlotScale {
+  lo: number;
+  hi: number;
+  top: number;
+  bottom: number;
+  base: number;
+  fixed: boolean;
+}
+export const plotScale = (
+  vals: readonly number[],
+  lim: { min?: number; max?: number },
+  zero: boolean,
+  pad: number,
+): PlotScale => {
+  let dlo = Infinity,
+    dhi = -Infinity;
+  for (const v of vals) {
+    if (v < dlo) dlo = v;
+    if (v > dhi) dhi = v;
+  }
+  const hasMin = lim.min !== undefined,
+    hasMax = lim.max !== undefined;
+  let bottom = hasMin ? Math.min(lim.min!, dlo) : zero ? Math.min(0, dlo) : dlo,
+    top = hasMax ? Math.max(lim.max!, dhi) : zero ? Math.max(0, dhi) : dhi;
+  // a flat line gets a range of 2, on the sides not written (one flat at its written min stays on
+  // the floor); a flat row of columns a range of 1. Both written: min < max, never flat
+  if (top === bottom && !zero) {
+    if (hasMin) top += 2;
+    else if (hasMax) bottom -= 2;
+    else {
+      top += 1;
+      bottom -= 1;
+    }
+  }
+  const p = (top - bottom) * pad;
+  const lo = bottom - (hasMin ? 0 : p);
+  let hi = top + (hasMax ? 0 : p);
+  if (hi === lo) hi = lo + 1;
+  return {
+    lo,
+    hi,
+    top,
+    bottom,
+    base: Math.min(Math.max(0, lo), hi),
+    fixed: hasMin || hasMax,
+  };
+};
+
 // the change of a value over the last `hours`: `current` against the last reading at or before
 // the span's start (the first reading when the series starts later); null without both
 export const trendOf = (

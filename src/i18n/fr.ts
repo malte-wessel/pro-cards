@@ -789,6 +789,8 @@ const fr: Translation = {
   "editor.card.field.visual_bucket": "Intervalle",
   "editor.card.field.visual_smoothing": "Lissage",
   "editor.card.field.visual_axis": "Axes",
+  "editor.card.field.visual_min": "Bas de l'échelle",
+  "editor.card.field.visual_max": "Haut de l'échelle",
   "editor.card.field.visual_src": "Source",
   "editor.card.field.visual_opacity": "Opacité",
   "editor.card.field.visual_tint": "Teinte",
@@ -892,6 +894,10 @@ const fr: Translation = {
   "editor.card.help.visual_src": "L'historique d'une autre entité. Vide : celui de cette carte",
   "editor.card.help.visual_opacity": "Dans quelle mesure l'image transparaît",
   "editor.card.help.visual_bucket": "Minutes par colonne ou bloc",
+  "editor.card.help.visual_min":
+    "Les valeurs plus basses élargissent l'échelle. Vide : le minimum de la carte, sinon celui des données",
+  "editor.card.help.visual_max":
+    "Les valeurs plus hautes élargissent l'échelle. Vide : le maximum de la carte, sinon celui des données",
   "editor.card.help.status":
     "Un texte ou un modèle. Vide : celui du type ou de la règle correspondante",
   "editor.card.help.rules":
