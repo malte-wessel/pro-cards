@@ -781,6 +781,7 @@ const es: Translation = {
   "editor.card.field.max": "Hasta (máx.)",
   "editor.card.field.show_name": "Mostrar nombre",
   "editor.card.field.show_secondary": "Mostrar línea secundaria",
+  "editor.card.field.show_aside": "Mostrar segundo valor",
   "editor.card.field.show_value": "Mostrar valor",
   "editor.card.field.icon_thing": "El icono muestra",
   "editor.card.field.icon_src": "Imagen",

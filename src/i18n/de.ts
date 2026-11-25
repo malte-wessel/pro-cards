@@ -779,6 +779,7 @@ const de: Translation = {
   "editor.card.field.max": "Bis (max)",
   "editor.card.field.show_name": "Namen anzeigen",
   "editor.card.field.show_secondary": "Zweite Zeile anzeigen",
+  "editor.card.field.show_aside": "Zweiten Wert anzeigen",
   "editor.card.field.show_value": "Wert anzeigen",
   "editor.card.field.icon_thing": "Symbol zeigt",
   "editor.card.field.icon_src": "Bild",

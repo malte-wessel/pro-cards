@@ -651,8 +651,10 @@ export const configToForm = (
   // the line under the value: shown unless `secondary: false`
   d.show_secondary = c.secondary !== false;
   if (c.secondary === false) d.secondary = "";
-  // a poster's second value: its entity and its attribute (its other keys stay as written)
+  // a poster's second value: whether it shows (`aside: false`: not even the kind's), its entity and
+  // its attribute (its other keys stay as written)
   if (thing === "poster") {
+    d.show_aside = c.aside !== false;
     d.aside =
       typeof c.aside === "string"
         ? c.aside
@@ -789,6 +791,12 @@ const asideFromForm = (entity: unknown, attribute: unknown, written: unknown): u
   // the shortest spelling: an entity alone is its id
   if (!Object.keys(rest).length) return e;
   return { ...(e ? { entity: e } : {}), ...rest };
+};
+// the entity a poster's second value names (null: none, it reads the card's)
+export const asideEntityOf = (config: CardConfigBase): string | null => {
+  const a = (config as Raw).aside;
+  if (typeof a === "string" && a) return a;
+  return isObj(a) && typeof a.entity === "string" && a.entity ? a.entity : null;
 };
 // a poster's second value fitted to the entities it reads now (another one picked for it, or for
 // the card while it reads the card's): an attribute its entity lacks goes, and with nothing left to
@@ -1078,6 +1086,9 @@ export const formToConfig = (
   // a poster's second value: its entity from the form, its other keys as written
   if (thing === "poster" && changed("aside"))
     put("aside", asideFromForm(data.aside, data.aside_attribute, p.aside));
+  // turned off: none, not even the kind's; on again: the kind's, or the one written
+  if (thing === "poster" && data.show_aside === false) c.aside = false;
+  else if (thing === "poster" && c.aside === false) delete c.aside;
   if (changed("visual_")) put("visual", visualFromForm(data, kind, thing));
   if (changed("input_")) put("inputs", inputsFromForm(data, kind, isObj(p.inputs) ? p.inputs : {}));
   if (changed("series")) {

@@ -778,6 +778,7 @@ const nb: Translation = {
   "editor.card.field.max": "Til (maks)",
   "editor.card.field.show_name": "Vis navn",
   "editor.card.field.show_secondary": "Vis sekundær linje",
+  "editor.card.field.show_aside": "Vis andre verdi",
   "editor.card.field.show_value": "Vis verdi",
   "editor.card.field.icon_thing": "Ikonet viser",
   "editor.card.field.icon_src": "Bilde",

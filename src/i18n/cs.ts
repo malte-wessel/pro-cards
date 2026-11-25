@@ -778,6 +778,7 @@ const cs: Translation = {
   "editor.card.field.max": "Do (max)",
   "editor.card.field.show_name": "Zobrazit název",
   "editor.card.field.show_secondary": "Zobrazit druhý řádek",
+  "editor.card.field.show_aside": "Zobrazit druhou hodnotu",
   "editor.card.field.show_value": "Zobrazit hodnotu",
   "editor.card.field.icon_thing": "Ikona zobrazuje",
   "editor.card.field.icon_src": "Obrázek",

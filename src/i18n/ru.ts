@@ -779,6 +779,7 @@ const ru: Translation = {
   "editor.card.field.max": "До (макс.)",
   "editor.card.field.show_name": "Показывать название",
   "editor.card.field.show_secondary": "Показывать вторую строку",
+  "editor.card.field.show_aside": "Показывать второе значение",
   "editor.card.field.show_value": "Показывать значение",
   "editor.card.field.icon_thing": "Иконка показывает",
   "editor.card.field.icon_src": "Изображение",

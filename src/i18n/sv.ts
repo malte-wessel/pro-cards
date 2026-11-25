@@ -778,6 +778,7 @@ const sv: Translation = {
   "editor.card.field.max": "Till (max)",
   "editor.card.field.show_name": "Visa namn",
   "editor.card.field.show_secondary": "Visa sekundär rad",
+  "editor.card.field.show_aside": "Visa andra värde",
   "editor.card.field.show_value": "Visa värde",
   "editor.card.field.icon_thing": "Ikonen visar",
   "editor.card.field.icon_src": "Bild",

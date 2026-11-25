@@ -776,6 +776,7 @@ const en = {
   "editor.card.field.max": "To (max)",
   "editor.card.field.show_name": "Show name",
   "editor.card.field.show_secondary": "Show secondary line",
+  "editor.card.field.show_aside": "Show second value",
   "editor.card.field.show_value": "Show value",
   "editor.card.field.icon_thing": "Icon shows",
   "editor.card.field.icon_src": "Picture",

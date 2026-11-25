@@ -779,6 +779,7 @@ const nl: Translation = {
   "editor.card.field.max": "Tot (max)",
   "editor.card.field.show_name": "Naam tonen",
   "editor.card.field.show_secondary": "Tweede regel tonen",
+  "editor.card.field.show_aside": "Tweede waarde tonen",
   "editor.card.field.show_value": "Waarde tonen",
   "editor.card.field.icon_thing": "Icoon toont",
   "editor.card.field.icon_src": "Afbeelding",

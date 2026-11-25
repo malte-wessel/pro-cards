@@ -809,7 +809,13 @@ export const rangeInfo = (x: SchemaCtx) => {
     fills.push(tr(`visual_thing.${visual}`));
   // a light's glow follows its brightness; a thermostat's and an alarm's are their own drawing
   if (visual === "glow" && !x.kind.level && !x.kind.glow) fills.push(tr("visual_thing.glow"));
-  if (data.icon_ring === true && iconThing !== "none" && iconThing !== "flow")
+  // (a ring of another entity reads that one's scale)
+  if (
+    data.icon_ring === true &&
+    !(typeof data.icon_ring_entity === "string" && data.icon_ring_entity) &&
+    iconThing !== "none" &&
+    iconThing !== "flow"
+  )
     fills.push(tr("range.ring"));
   const { domain, drawn } = controlsOf(x, data);
   const limited =
@@ -1012,18 +1018,24 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
             : []),
         ]),
     // a poster's second value beside its value (another entity's state; its other keys in YAML)
+    // a poster's second value: whether it shows, then what it reads (filled in: it stays)
     ...(thing === "poster" && (writes("aside") || filledIn("aside_attribute"))
       ? [
-          { name: "aside", selector: { entity: {} } },
-          // what it reads of its entity, else of the card's (a thermostat's target)
-          {
-            name: "aside_attribute",
-            selector: {
-              attribute: {
-                entity_id: (filledIn("aside") ? data.aside : entity) as string,
-              },
-            },
-          },
+          { name: "show_aside", selector: { boolean: {} } },
+          ...(data.show_aside !== false || filledIn("aside") || filledIn("aside_attribute")
+            ? [
+                { name: "aside", selector: { entity: {} } },
+                // what it reads of its entity, else of the card's (a thermostat's target)
+                {
+                  name: "aside_attribute",
+                  selector: {
+                    attribute: {
+                      entity_id: (filledIn("aside") ? data.aside : entity) as string,
+                    },
+                  },
+                },
+              ]
+            : []),
         ]
       : []),
     ...(format.length ? [heading("format_heading"), ...format] : []),

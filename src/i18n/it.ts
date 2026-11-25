@@ -780,6 +780,7 @@ const it: Translation = {
   "editor.card.field.max": "A (max)",
   "editor.card.field.show_name": "Mostra il nome",
   "editor.card.field.show_secondary": "Mostra riga secondaria",
+  "editor.card.field.show_aside": "Mostra secondo valore",
   "editor.card.field.show_value": "Mostra il valore",
   "editor.card.field.icon_thing": "L'icona mostra",
   "editor.card.field.icon_src": "Immagine",

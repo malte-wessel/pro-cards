@@ -168,6 +168,10 @@ export class PosterCard extends KindCardBase {
       ...kind,
       imageUrl(ctx, this._iconLook(kc).iconImage),
       cfg.asideIdx === null ? null : this._modelAt(ctx, cfg.asideIdx),
+      // (one written as the time from now: the minute too)
+      cfg.asideIdx !== null && cfg.entities[cfg.asideIdx].format === "relative"
+        ? Math.floor(ctx.now / 60e3)
+        : null,
     ];
   }
   // the kind's colour where neither the item (the poster, the status badge) nor its rule names one.
@@ -268,7 +272,9 @@ export class PosterCard extends KindCardBase {
       const kept = this._valueFit?.width === width ? this._valueFit : null;
       // controls try beside the value first
       const place = kept?.place ?? (end ? "beside" : null);
-      const aside = kept?.aside ?? "beside";
+      // (the second value's place holds for the width too, but one left out, maybe for want of
+      // height, is tried again at a new size)
+      const aside = kept && kept.aside !== "out" ? kept.aside : "beside";
       this._valueFit = { size, width, px: null, base: null, drop: false, place, aside };
       this._placeControls(row);
     }
@@ -310,9 +316,14 @@ export class PosterCard extends KindCardBase {
       placeAside(
         row.querySelector(":scope > .pbody > .pmain > .ptext > .secondary") ? "out" : "under",
       );
-    // (a text under the value wider than the card: out too, it is never cut)
-    const wide = () =>
-      !!aside && aside.getBoundingClientRect().right > body.getBoundingClientRect().right + 0.5;
+    // (a text under the value wider than the card: out too, it is never cut; either edge, for a
+    // right-to-left page)
+    const wide = () => {
+      if (!aside) return false;
+      const a = aside.getBoundingClientRect(),
+        r = body.getBoundingClientRect();
+      return a.right > r.right + 0.5 || a.left < r.left - 0.5;
+    };
     if (aside && fit.aside === "under" && (short() > 0.5 || wide())) placeAside("out");
     if (!misses()) return;
     // the styled size, found once per card size
