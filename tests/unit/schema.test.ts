@@ -560,7 +560,13 @@ describe("card config schemas", () => {
         { color: "orange" },
       ])
         ok({ entity: H, icon: { ring } }, `ring ${JSON.stringify(ring)}`);
-      for (const ring of ["battery", { max: 80 }, { entity: B, size: 2 }, 5])
+      for (const ring of [
+        "battery",
+        { max: 80 },
+        { entity: B, size: 2 },
+        5,
+        { color: "{{ 'red' }}" },
+      ])
         bad({ entity: H, icon: { ring } }, `ring ${JSON.stringify(ring)}`);
       // a rule switches the ring and colours it, it reads nothing else
       ok({ entity: H, rules: [{ above: 50, icon: { ring: { color: "red" } } }] }, "rule's colour");
@@ -583,7 +589,13 @@ describe("card config schemas", () => {
       { entity: B, icon: "mdi:target", prefix: "→" },
     ])
       expect(poster({ aside }), JSON.stringify(aside)).toBeNull();
-    for (const aside of [true, { entity: B, color: "red" }, { entity: B, rules: [] }])
+    for (const aside of [
+      true,
+      {},
+      { icon: "mdi:x" },
+      { entity: B, color: "red" },
+      { entity: B, rules: [] },
+    ])
       expect(poster({ aside }), JSON.stringify(aside)).toBeTruthy();
     // a tile's line has no second value
     expect(validate({ type: "custom:tile-card-pro", entity: H, aside: B })).toBeTruthy();

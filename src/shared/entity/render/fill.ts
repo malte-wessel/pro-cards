@@ -376,11 +376,6 @@ export const fillTableSlots = (
   row.appendChild(top);
 };
 
-// a poster (the poster card's row): the icon at the top left, and at the bottom the name, then
-// the big value and the secondary line as one block with the controls beside it (under it where
-// they do not fit), then the controls below it and the visual (a plot along the bottom);
-// `show_icon`, `show_name` and `show_value` leave their part out. Only the poster's own parts are filled again, never the badge rows in its
-// corner (filled apart).
 // a poster's second value: a number a step above the value's unit, its own unit a step below, in
 // the secondary colour (styles: .paside); the poster moves it under the value, or leaves it out,
 // before the value gets smaller (PosterCard._fitValue)
@@ -402,6 +397,11 @@ const asideEl = (fmt: FmtValue, icon: string | null) => {
   }
   return el;
 };
+// a poster (the poster card's row): the icon at the top left, and at the bottom the name, then
+// the big value and the secondary line as one block with the controls beside it (under it where
+// they do not fit), then the controls below it and the visual (a plot along the bottom);
+// `show_icon`, `show_name` and `show_value` leave their part out. Only the poster's own parts are filled again, never the badge rows in its
+// corner (filled apart).
 export const fillPosterSlots = (
   ctx: RenderCtx,
   row: HTMLElement,

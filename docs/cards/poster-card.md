@@ -97,7 +97,7 @@ Every part has a key of its own: `name`, `icon`, `color`, `value`, `status`, `vi
 
 ## A second value
 
-`aside` puts a second value beside the value, smaller and in the grey of the secondary text: a target beside a temperature, a forecast high, yesterday's total. Give it an entity, or `{ entity, attribute, … }` with a badge's value keys; without an entity it reads the card's own (`aside: { attribute: temperature }` on a thermostat). A thermostat shows its target there by itself where no stepper does; `aside: false` turns it off.
+`aside` puts a second value beside the value, smaller and in the grey of the secondary text: a target beside a temperature, a forecast high, yesterday's total. Give it an entity, or `{ entity, attribute, … }` with a badge's value keys; without an entity it reads the card's own (`aside: { attribute: temperature }` on a thermostat). A thermostat shows its target there by itself where no stepper does; `aside: false` turns it off, and a `secondary` of your own replaces it, as it replaced the target's line.
 
 Where the line is too narrow, the second value moves under the value, or is left out where a line is already there: the value never gets smaller for it.
 
@@ -107,7 +107,7 @@ Where the line is too narrow, the second value moves under the value, or is left
 - type: custom:poster-card-pro
   entity: sensor.living_room_temperature
   name: Living room
-  aside: { entity: climate.living_room, attribute: temperature }
+  aside: { entity: climate.living_room, attribute: temperature, decimals: 1 }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: climate.living_room
@@ -154,20 +154,20 @@ Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to 
 
 ### Texts and value
 
-| Key                       | Default                      | Description                                                                                                                                                                             |
-| ------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`                    | the friendly name            | The name above the value. Template allowed. Or its parts, as Home Assistant composes it: `[{ type: entity }]`; see [Tile](/cards/tile-card#names).                                      |
-| `value`                   | the kind's, else the state   | A text or a template in place of the state.                                                                                                                                             |
-| `attribute`               | –                            | Shows this attribute in place of the state.                                                                                                                                             |
-| `unit`                    | the entity's                 | The value's unit.                                                                                                                                                                       |
-| `decimals`                | –                            | Decimals of a number, 0 to 3.                                                                                                                                                           |
-| `format`                  | `auto`                       | How the value is written: `auto` (a timer: its time left as a clock), `power`, `duration`, `clock` or `relative`; see [Badges](/cards/badges#format-and-staleness).                     |
-| `prefix`, `suffix`        | –                            | Text before and after the value.                                                                                                                                                        |
-| `min`, `max`              | the entity's, else 0 and 100 | The range of a bar, a gauge, segments, a glow or the icon's ring. Written, they also scale a plot of the entity's state (`sparkline`, `columns`) that has no `min` or `max` of its own. |
-| `aside`                   | the kind's                   | A second value beside the value: an entity id, `{ entity, attribute, value, unit, decimals, format, prefix, icon }`, or `false` for none. Without an entity it reads the card's.        |
-| `secondary`               | the kind's                   | The line under the value. Template allowed.                                                                                                                                             |
-| `status`                  | the rule's, else the kind's  | The status badge, first in the corner: a text, a template, or `false` for none. It wins over the rules.                                                                                 |
-| `show_name`, `show_value` | `true`                       | `false` leaves out the name or the value.                                                                                                                                               |
+| Key                       | Default                      | Description                                                                                                                                                                                        |
+| ------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                    | the friendly name            | The name above the value. Template allowed. Or its parts, as Home Assistant composes it: `[{ type: entity }]`; see [Tile](/cards/tile-card#names).                                                 |
+| `value`                   | the kind's, else the state   | A text or a template in place of the state.                                                                                                                                                        |
+| `attribute`               | –                            | Shows this attribute in place of the state.                                                                                                                                                        |
+| `unit`                    | the entity's                 | The value's unit.                                                                                                                                                                                  |
+| `decimals`                | –                            | Decimals of a number, 0 to 3.                                                                                                                                                                      |
+| `format`                  | `auto`                       | How the value is written: `auto` (a timer: its time left as a clock), `power`, `duration`, `clock` or `relative`; see [Badges](/cards/badges#format-and-staleness).                                |
+| `prefix`, `suffix`        | –                            | Text before and after the value.                                                                                                                                                                   |
+| `min`, `max`              | the entity's, else 0 and 100 | The range of a bar, a gauge, segments, a glow or a ring of the card's value. Written, they also scale a plot of the entity's state (`sparkline`, `columns`) that has no `min` or `max` of its own. |
+| `aside`                   | the kind's                   | A second value beside the value: an entity id, `{ entity, attribute, value, unit, decimals, format, prefix, icon }`, or `false` for none. Without an entity it reads the card's.                   |
+| `secondary`               | the kind's                   | The line under the value. Template allowed.                                                                                                                                                        |
+| `status`                  | the rule's, else the kind's  | The status badge, first in the corner: a text, a template, or `false` for none. It wins over the rules.                                                                                            |
+| `show_name`, `show_value` | `true`                       | `false` leaves out the name or the value.                                                                                                                                                          |
 
 ### Look
 

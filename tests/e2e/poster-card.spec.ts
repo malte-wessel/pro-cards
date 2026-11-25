@@ -1365,6 +1365,7 @@ test.describe("a poster's second value and a ring of another entity", () => {
         { type: P, entity: "climate.living_room" },
         { type: P, entity: "climate.living_room", control: false, aside: false },
         { type: "custom:tile-card-pro", entity: "climate.living_room", control: false },
+        { type: P, entity: "climate.living_room", control: false, secondary: "Living room" },
       ],
       { width: 800 },
     );
@@ -1373,6 +1374,9 @@ test.describe("a poster's second value and a ring of another entity", () => {
     await expect(card(page, 0).locator(".ptext > .secondary")).toHaveCount(0);
     await expect(card(page, 1).locator(".paside")).toHaveCount(0);
     await expect(card(page, 2).locator(".paside")).toHaveCount(0);
+    // a line of the card's own replaces the target, as it replaced the target's line
+    await expect(card(page, 4).locator(".paside")).toHaveCount(0);
+    await expect(card(page, 4).locator(".ptext > .secondary")).toHaveText("Living room");
     // a tile keeps its target in its line
     await expect(card(page, 3)).toContainText("→ 21.0 °C");
   });
@@ -1383,12 +1387,20 @@ test.describe("a poster's second value and a ring of another entity", () => {
       { type: P, entity: "climate.living_room", control: false },
       // a line under the value: it is left out
       { type: P, entity: TEMP, aside: "sensor.outdoor_temperature" },
+      {
+        type: P,
+        entity: "climate.living_room",
+        control: false,
+        aside: { entity: "climate.living_room", value: "Comfort until a quarter past ten" },
+      },
     ]);
     await expect(card(page, 0).locator(".pvalue")).toHaveClass(/aside-under/);
     await expect(card(page, 0).locator(".paside")).toBeVisible();
     await expect(card(page, 1).locator(".paside")).toBeHidden();
+    // a text wider than the card under the value: out too, never cut by the card's edge
+    await expect(card(page, 2).locator(".paside")).toBeHidden();
     // the value keeps its size
-    for (const i of [0, 1]) await expect(card(page, i).locator(".big")).not.toHaveClass(/hfit/);
+    for (const i of [0, 1, 2]) await expect(card(page, i).locator(".big")).not.toHaveClass(/hfit/);
   });
 
   test("a ring around the icon or a badge's reads another entity", async ({ page }) => {
@@ -1414,5 +1426,25 @@ test.describe("a poster's second value and a ring of another entity", () => {
     await setState(page, "sensor.battery_soc", "20");
     await expect.poll(() => filled(lead.locator(".prog"))).toBeCloseTo(0.2, 2);
     await expect.poll(() => filled(badge)).toBeCloseTo(0.2, 2);
+  });
+
+  test("a ring keeps its colour where the kind draws the icon", async ({ page }) => {
+    const ring = { entity: "sensor.battery_soc", color: "orange" };
+    await mount(
+      page,
+      [
+        { type: P, entity: "weather.home", icon: { ring } },
+        { type: "custom:tile-card-pro", entity: "weather.home", icon: { ring } },
+      ],
+      { width: 800 },
+    );
+    for (const i of [0, 1]) {
+      const lead = card(page, i).locator(".lead.ring");
+      await expect(lead).toHaveCount(1);
+      expect(await lead.evaluate((e) => e.style.getPropertyValue("--ring-color"))).toBe(
+        "var(--orange-color)",
+      );
+      await expect.poll(() => filled(lead.locator(".prog"))).toBeCloseTo(0.64, 2);
+    }
   });
 });

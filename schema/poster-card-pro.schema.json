@@ -85,6 +85,17 @@
               "description": "An icon before it (mdi:…)"
             }
           },
+          "anyOf": [
+            {
+              "required": ["entity"]
+            },
+            {
+              "required": ["attribute"]
+            },
+            {
+              "required": ["value"]
+            }
+          ],
           "additionalProperties": false
         }
       ]
@@ -753,7 +764,7 @@
               "type": "number"
             },
             "color": {
-              "$ref": "defs.schema.json#/$defs/color"
+              "$ref": "#/$defs/ringColor"
             }
           },
           "dependentRequired": {
@@ -762,6 +773,19 @@
             "max": ["entity"]
           },
           "additionalProperties": false
+        }
+      ]
+    },
+    "ringColor": {
+      "description": "A ring's own colour: a colour name or a hex (no template)",
+      "allOf": [
+        {
+          "$ref": "defs.schema.json#/$defs/color"
+        },
+        {
+          "not": {
+            "pattern": "\\{\\{"
+          }
         }
       ]
     },
@@ -775,7 +799,7 @@
           "type": "object",
           "properties": {
             "color": {
-              "$ref": "defs.schema.json#/$defs/color"
+              "$ref": "#/$defs/ringColor"
             }
           },
           "additionalProperties": false

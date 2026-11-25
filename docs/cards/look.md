@@ -158,7 +158,7 @@ The **icon** draws one of these:
 - `image`: a picture in the icon's circle;
 - `flow`: the wind's or the rain's animation.
 
-An `icon` or an `image` takes `ring: true`, a ring of the value around it. `ring` can also read another entity: an entity id, or `{ entity, attribute, min, max, color }`, on that entity's scale (its own `min` and `max`, else 0 to 100), in the card's colour unless it names one. A rule switches the ring on and off and colours it, but never names another entity. Every icon takes `style: plain`, the icon without its circle.
+An `icon` or an `image` takes `ring: true`, a ring of the value around it. `ring` can also read another entity: an entity id, or `{ entity, attribute, min, max, color }`, on that entity's scale (its own `min` and `max`, or `min_value` and `max_value`, else 0 to 100), in the card's colour unless it names one. A rule switches the ring on and off and colours it, but never names another entity. Every icon takes `style: plain`, the icon without its circle.
 
 The **visual** draws one of these:
 

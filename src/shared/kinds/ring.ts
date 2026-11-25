@@ -44,6 +44,8 @@ export const parseRing = (v: unknown, at: string, rule = false): RingWritten => 
       out.entity = x;
     } else if (k === "attribute" || k === "color") {
       if (typeof x !== "string" || !x) throw new Error(`${at}: a ring's ${k} must be a text`);
+      if (k === "color" && x.includes("{{"))
+        throw new Error(`${at}: a ring's color is a colour (a name or a hex), not a template`);
       out[k] = x;
     } else {
       if (typeof x !== "number" || !Number.isFinite(x))

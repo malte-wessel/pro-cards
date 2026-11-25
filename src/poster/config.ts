@@ -12,7 +12,7 @@ import {
   type KindConfig,
   type RawKindCardConfig,
 } from "../shared/kinds/config.ts";
-import { normalizeAside } from "../shared/kinds/aside.ts";
+import { normalizeAside } from "./aside.ts";
 import { CARD_TYPE } from "./constants.ts";
 
 export interface RawPosterCardConfig extends RawKindCardConfig {

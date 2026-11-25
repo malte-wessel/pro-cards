@@ -35,6 +35,9 @@ describe("a ring as written", () => {
     expect(() => parseRing({ entity: "sensor.v", min: "0" }, "icon")).toThrow(
       "icon: a ring's min must be a number",
     );
+    expect(() => parseRing({ color: "{{ 'red' }}" }, "icon")).toThrow(
+      "icon: a ring's color is a colour (a name or a hex), not a template",
+    );
     expect(() => parseRing({ entity: "sensor.v", min: 5, max: 5 }, "icon")).toThrow(
       "icon: a ring's min must be below its max",
     );

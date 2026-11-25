@@ -437,7 +437,12 @@ export abstract class KindCardBase extends EntityCardBase {
     // the item with its icon as the place draws it now (its style, its ring): a kind that builds
     // its own lead (the weather's condition, the sun, a solar's) draws it so
     const look = this._iconLook(kc);
-    kc.ent = { ...kc.ent, iconStyle: look.iconStyle, iconRing: look.iconRing };
+    kc.ent = {
+      ...kc.ent,
+      iconStyle: look.iconStyle,
+      iconRing: look.iconRing,
+      ringColor: look.iconRingColor,
+    };
     return kc;
   }
   // the places the kind fills, less those the card sets itself; the icon's own actions take the
@@ -454,7 +459,12 @@ export abstract class KindCardBase extends EntityCardBase {
       delete o.word;
       delete o.num;
     }
-    if (raw.secondary !== undefined) delete o.secondary;
+    // (a written line under the value replaces what the kind says there or beside the value: a
+    // thermostat's target, which was its line)
+    if (raw.secondary !== undefined) {
+      delete o.secondary;
+      delete o.aside;
+    }
     // (a poster's own second value, or aside: false, in place of the kind's)
     if (raw.aside !== undefined) delete o.aside;
     // the value as `format` writes it (a timer's time left) where the kind writes none, and in

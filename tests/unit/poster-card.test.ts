@@ -506,6 +506,8 @@ describe("poster-card config", () => {
     });
     // a template needs no entity
     const v = norm({ entity: H, aside: { value: "{{ 3 }}", unit: "x" } });
+    // nothing to read of its own: never the card's value again
+    expect(() => norm({ entity: H, aside: {} })).toThrow(`${T}: aside needs an entity`);
     expect(v.entities[v.asideIdx!].entity).toBeNull();
     // none written, or none at all: no item (the kind's, where it has one, or nothing)
     expect(norm({ entity: H }).asideIdx).toBeNull();

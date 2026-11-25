@@ -310,7 +310,10 @@ export class PosterCard extends KindCardBase {
       placeAside(
         row.querySelector(":scope > .pbody > .pmain > .ptext > .secondary") ? "out" : "under",
       );
-    if (aside && fit.aside === "under" && short() > 0.5) placeAside("out");
+    // (a text under the value wider than the card: out too, it is never cut)
+    const wide = () =>
+      !!aside && aside.getBoundingClientRect().right > body.getBoundingClientRect().right + 0.5;
+    if (aside && fit.aside === "under" && (short() > 0.5 || wide())) placeAside("out");
     if (!misses()) return;
     // the styled size, found once per card size
     if (fit.base === null) {

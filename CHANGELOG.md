@@ -17,7 +17,7 @@ _Beta_
 
 - **Schedules:** a schedule tile or poster showed On or Off; it now shows when it changes next and today's blocks (a tile is two rows high). `visual: false` leaves the blocks out.
 - **Plots of the card's own entity** take the `min` and `max` written on the card, as its bar, gauge and ring do; they fitted their data alone. A card that writes them (for a bar, a ring or a slider) now draws its plot on that scale: columns as bright as they are tall, growing from a `min` above 0.
-- **Thermostat posters** without a stepper show the target as their second value beside the temperature, where it was the line under it. `aside: false` turns it off.
+- **Thermostat posters** without a stepper show the target as their second value beside the temperature, where it was the line under it. `aside: false` turns it off; a poster with a `secondary` of its own shows neither, as before.
 - **A soft badge's name** is in the badge's colour, as its value is; it was grey on the coloured tint.
 - **A plot's axis** (`axis: true`) is a row above the drawing: the scale's range on the left, the window (`24 h`) on the right. Its labels lay over the columns or the line, with the window's start above now; the plot keeps its height, the drawing is the row shorter.
 
