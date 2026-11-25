@@ -252,7 +252,8 @@
   /* outline: Home Assistant's badge, on the card's surface (its background, border and shadow) */
   .row.hval.b-outline { --b-bw: var(--ha-card-border-width, 1px); background: ${ee}; border: var(--b-bw) solid var(--ha-card-border-color, var(--divider-color)); box-shadow: var(--ha-card-box-shadow, none); backdrop-filter: var(--ha-card-backdrop-filter, none); }
   .row.hval.b-soft { background: var(--fe-soft); }
-  .row.hval.b-soft .state { color: var(--fe-color); }
+  /* soft: the pill in its colour, the name with the value (a grey name on the tint would split it) */
+  .row.hval.b-soft :is(.state, .secondary) { color: var(--fe-color); }
   .row.hval.b-filled { --b-ink: var(--text-primary-color, #fff); background: var(--fe-color); color: var(--b-ink); }
   .row.hval.b-filled :is(ha-icon, ha-state-icon, .state, .state.accent, .secondary) { color: var(--b-ink); }
   /* tag: the poster's status pill, a coloured outline and its text in the row's colour (a border,

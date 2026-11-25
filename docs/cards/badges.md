@@ -105,7 +105,7 @@ A badge takes its entity's [kind](/cards/kinds), but only its colours: a battery
 
 ### Styles and sizes
 
-`style` sets the pill: `outline` (Home Assistant's badge), `soft` (a tint of the badge's colour), `filled` (the badge's colour), `plain` (only the icon and the value) or `tag` (an outline and text in the badge's colour). `size` sets its height: `s`, `m` or `l`.
+`style` sets the pill: `outline` (Home Assistant's badge), `soft` (a tint of the badge's colour, its text in the colour), `filled` (the badge's colour), `plain` (only the icon and the value) or `tag` (an outline and text in the badge's colour). `size` sets its height: `s`, `m` or `l`.
 
 ::: live
 
