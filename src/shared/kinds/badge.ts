@@ -34,6 +34,7 @@ import { oneOf } from "../util.ts";
 import { textOf } from "./config.ts";
 import { detectKind, parseKind, resolveKind } from "./detect.ts";
 import { optionsOf } from "./places.ts";
+import { ringColorOf, ringOn, ringSourceOf, type RingWritten } from "./ring.ts";
 import { KINDS } from "./registry.ts";
 import { toRule } from "./rules.ts";
 import type { Kind } from "./types.ts";
@@ -56,11 +57,12 @@ const ICON_OPTIONS: Record<IconThing, readonly string[]> = {
 interface IconWritten {
   type?: IconThing;
   name?: string;
-  ring?: boolean;
+  ring?: RingWritten;
   src?: string;
 }
-// `icon` as written: a name, the thing and its options, or false
-const parseIcon = (raw: unknown, at: string): IconWritten | false | undefined => {
+// `icon` as written: a name, the thing and its options, or false (a rule's: its ring reads nothing
+// of its own)
+const parseIcon = (raw: unknown, at: string, rule = false): IconWritten | false | undefined => {
   if (raw === undefined || raw === null) return undefined;
   if (raw === false) return false;
   if (typeof raw === "string") {
@@ -73,7 +75,7 @@ const parseIcon = (raw: unknown, at: string): IconWritten | false | undefined =>
     throw new Error(
       `${at}: type must be one of ${ICON_THINGS.join(", ")}, not ${JSON.stringify(type)}`,
     );
-  const opts = optionsOf(raw, type ? ICON_OPTIONS[type] : ["name", "ring", "src"], at, type, false);
+  const opts = optionsOf(raw, type ? ICON_OPTIONS[type] : ["name", "ring", "src"], at, type, rule);
   return { ...(type ? { type } : {}), ...opts } as IconWritten;
 };
 // an object without a type merges onto the place below: a src only onto a picture
@@ -93,9 +95,18 @@ const iconOver = (base: BadgeIcon, over: IconWritten | false | undefined): Badge
     (base.type === "none" || (base.type === "dot" && over.name !== undefined) ? "icon" : base.type);
   const rings = type === "icon" || type === "image";
   const src = over.src !== undefined ? parseImage(over.src) || null : null;
+  // a ring over a ring: false turns it off, true keeps its colour, a colour of its own wins
+  const ring = rings && (over.ring === undefined ? base.ring : ringOn(over.ring));
+  const color = !ring
+    ? null
+    : over.ring === undefined || over.ring === true
+      ? base.ringColor
+      : (ringColorOf(over.ring) ?? base.ringColor);
   return {
     type,
-    ring: rings && (over.ring ?? base.ring),
+    ring,
+    // (only where it names one: a ring in the badge's colour has none)
+    ...(color ? { ringColor: color } : {}),
     src: type === "image" ? (src ?? (base.type === "image" ? base.src : null)) : null,
   };
 };
@@ -282,7 +293,7 @@ export const normalizePill = (
       throw new Error(
         `${at}.rules[${i}]: style must be one of ${BADGE_STYLES.join(", ")}, not ${val(r.style)}`,
       );
-    const place = parseIcon(r.icon, `${at}.rules[${i}].icon`);
+    const place = parseIcon(r.icon, `${at}.rules[${i}].icon`, true);
     srcFits(base, place, `${at}.rules[${i}].icon`);
     const [rule] = normalizeRules([
       {
@@ -315,6 +326,9 @@ export const normalizePill = (
   ent.rules = rules;
   ent.ruleWins = true;
   ent.valueRules = true;
+  // a ring that reads another entity (its own icon's: a rule only switches it and colours it)
+  const ringSrc = icon ? ringSourceOf(icon.ring) : null;
+  if (ringSrc) ent.ringSrc = ringSrc;
   ent.haAttribute = true;
   // what the pill draws after the value, over its own window
   const hours = visual?.hours ?? (visual?.type === "trend" ? 1 : 24);

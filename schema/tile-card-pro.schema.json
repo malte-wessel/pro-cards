@@ -287,6 +287,9 @@
         "badge": {
           "$ref": "#/$defs/iconBadge"
         },
+        "ring": {
+          "$ref": "poster-card-pro.schema.json#/$defs/ruleRing"
+        },
         "tap_action": false,
         "hold_action": false,
         "double_tap_action": false

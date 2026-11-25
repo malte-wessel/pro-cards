@@ -42,6 +42,53 @@
       ],
       "description": "The status in the corner: a text or a template, or false for none. Default: the matching rule's status, else the kind's. Its look is the card's: a tag in its colour"
     },
+    "aside": {
+      "description": "A second value beside the value, smaller and in the secondary colour: an entity id, its value keys (without an entity it reads the card's: { attribute: temperature }), or false for none. Left out: the kind's (a thermostat's target where no stepper shows it)",
+      "oneOf": [
+        {
+          "const": false
+        },
+        {
+          "$ref": "defs.schema.json#/$defs/entityId"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "entity": {
+              "$ref": "defs.schema.json#/$defs/entityId"
+            },
+            "attribute": {
+              "type": "string",
+              "minLength": 1
+            },
+            "value": {
+              "type": ["string", "number"],
+              "description": "A text or a template in place of the state"
+            },
+            "unit": {
+              "type": "string"
+            },
+            "decimals": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "format": {
+              "$ref": "#/$defs/format"
+            },
+            "prefix": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string",
+              "minLength": 1,
+              "description": "An icon before it (mdi:…)"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
     "badges": {
       "type": "array",
       "description": "The badges in the corner, in this order. A badge without an entity reads the poster's: its attribute, else the poster's value",
@@ -558,8 +605,7 @@
           "description": "icon: the icon's name (mdi:…, a template). Default: the entity's. image: the icon while there is no picture"
         },
         "ring": {
-          "type": "boolean",
-          "description": "icon, image: a ring of the value (min to max) around it"
+          "$ref": "#/$defs/ring"
         },
         "style": {
           "enum": ["circle", "plain"],
@@ -672,11 +718,69 @@
         }
       ],
       "properties": {
+        "ring": {
+          "$ref": "#/$defs/ruleRing"
+        },
         "tap_action": false,
         "hold_action": false,
         "double_tap_action": false
       },
       "unevaluatedProperties": false
+    },
+    "ring": {
+      "description": "icon, image: a ring around it: true for the value (min to max), an entity id or { entity, attribute, min, max, color } for another entity's value on its scale (its own min and max, else 0 to 100), { color } for the value in a colour of its own",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "defs.schema.json#/$defs/entityId"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "entity": {
+              "$ref": "defs.schema.json#/$defs/entityId"
+            },
+            "attribute": {
+              "type": "string",
+              "minLength": 1
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "color": {
+              "$ref": "defs.schema.json#/$defs/color"
+            }
+          },
+          "dependentRequired": {
+            "attribute": ["entity"],
+            "min": ["entity"],
+            "max": ["entity"]
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ruleRing": {
+      "description": "A rule's ring: on or off, or its colour; what it reads is the card's",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "color": {
+              "$ref": "defs.schema.json#/$defs/color"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "visualPlace": {
       "description": "What fills the card besides the icon and the texts: a thing's name, { type, … } with its options, or false for nothing. Left out: the kind's (a light's glow, the sun's day, a cover's drawing)",
@@ -2016,8 +2120,7 @@
               "description": "icon: the icon's name. image: the icon while there is no picture"
             },
             "ring": {
-              "type": "boolean",
-              "description": "icon, image: a ring of the value (min to max) around it"
+              "$ref": "#/$defs/ring"
             },
             "src": {
               "type": "string",
@@ -2142,7 +2245,24 @@
           "$ref": "defs.schema.json#/$defs/color"
         },
         "icon": {
-          "$ref": "#/$defs/badgeIcon"
+          "description": "The badge's icon while the rule matches; its ring switches and colours alone",
+          "allOf": [
+            {
+              "$ref": "#/$defs/badgeIcon"
+            },
+            {
+              "if": {
+                "type": "object"
+              },
+              "then": {
+                "properties": {
+                  "ring": {
+                    "$ref": "#/$defs/ruleRing"
+                  }
+                }
+              }
+            }
+          ]
         },
         "value": {
           "type": ["string", "number"],

@@ -769,6 +769,7 @@ const fr: Translation = {
   "editor.card.field.attribute": "Attribut",
   "editor.card.field.value": "Valeur",
   "editor.card.field.secondary": "Ligne secondaire",
+  "editor.card.field.aside": "Deuxième valeur",
   "editor.card.field.unit": "Unité",
   "editor.card.field.decimals": "Décimales",
   "editor.card.field.format": "Format",
@@ -783,6 +784,7 @@ const fr: Translation = {
   "editor.card.field.icon_src": "Image",
   "editor.card.field.icon_variant": "Animation",
   "editor.card.field.icon_ring": "Anneau avec la valeur",
+  "editor.card.field.icon_ring_entity": "L'anneau affiche",
   "editor.card.field.icon_style": "Style de l'icône",
   "editor.card.field.visual_thing": "Visuel",
   "editor.card.field.visual_hours": "Heures",
@@ -885,6 +887,10 @@ const fr: Translation = {
   "editor.card.range.empty": "Vide : {value}",
   "editor.card.range.inverted": "Doit être supérieur à « De », sinon rien ne se remplit",
   "editor.card.help.prefix": "Avant la valeur, comme ~ ou +",
+  "editor.card.help.aside":
+    "Une autre valeur à côté de la valeur, plus petite (une consigne, une prévision)",
+  "editor.card.help.icon_ring_entity":
+    "Une autre entité pour l'anneau ; vide : la valeur de la carte",
   "editor.card.help.suffix": "Après la valeur",
   "editor.card.help.found": "Trouvé sur l'appareil : {entity}",
   "editor.card.help.not_found": "Aucun trouvé sur l'appareil de l'entité",

@@ -768,6 +768,7 @@ const it: Translation = {
   "editor.card.field.attribute": "Attributo",
   "editor.card.field.value": "Valore",
   "editor.card.field.secondary": "Riga secondaria",
+  "editor.card.field.aside": "Secondo valore",
   "editor.card.field.unit": "Unità",
   "editor.card.field.decimals": "Decimali",
   "editor.card.field.format": "Formato",
@@ -782,6 +783,7 @@ const it: Translation = {
   "editor.card.field.icon_src": "Immagine",
   "editor.card.field.icon_variant": "Animazione",
   "editor.card.field.icon_ring": "Anello con il valore",
+  "editor.card.field.icon_ring_entity": "L'anello mostra",
   "editor.card.field.icon_style": "Stile dell'icona",
   "editor.card.field.visual_thing": "Grafica",
   "editor.card.field.visual_hours": "Ore",
@@ -884,6 +886,10 @@ const it: Translation = {
   "editor.card.range.empty": "Vuoto: {value}",
   "editor.card.range.inverted": "Deve essere maggiore di «Da», altrimenti non si riempie nulla",
   "editor.card.help.prefix": "Prima del valore, come ~ o +",
+  "editor.card.help.aside":
+    "Un altro valore accanto al valore, più piccolo (un obiettivo, una previsione)",
+  "editor.card.help.icon_ring_entity":
+    "Un'altra entità per l'anello; vuoto: il valore della scheda",
   "editor.card.help.suffix": "Dopo il valore",
   "editor.card.help.found": "Trovato sul dispositivo: {entity}",
   "editor.card.help.not_found": "Nessuno trovato sul dispositivo dell'entità",

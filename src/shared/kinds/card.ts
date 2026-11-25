@@ -5,6 +5,7 @@
 // animated lead kept through fills), what it draws behind the texts and its colour. The card
 // supplies `_normalize` (a KindConfig) and draws its places.
 import { cssColor } from "../color.ts";
+import { ringColorOf, ringOn } from "./ring.ts";
 import { CARD_BG } from "../constants.ts";
 import { EntityCardBase } from "../entity/base.ts";
 import { progressOf } from "../entity/look.ts";
@@ -454,6 +455,8 @@ export abstract class KindCardBase extends EntityCardBase {
       delete o.num;
     }
     if (raw.secondary !== undefined) delete o.secondary;
+    // (a poster's own second value, or aside: false, in place of the kind's)
+    if (raw.aside !== undefined) delete o.aside;
     // the value as `format` writes it (a timer's time left) where the kind writes none, and in
     // place of the kind's where the card writes a format that applies (a plug's power in kW)
     if (o.value === undefined || (raw.format !== undefined && c.ent.format !== "auto")) {
@@ -508,7 +511,8 @@ export abstract class KindCardBase extends EntityCardBase {
             : null;
     return {
       iconStyle: i.style === "plain" || i.style === "circle" ? i.style : kc.ent.iconStyle,
-      iconRing: !!i.ring,
+      iconRing: ringOn(i.ring),
+      iconRingColor: ringColorOf(i.ring),
       iconImage: image,
     };
   }
@@ -539,6 +543,7 @@ export abstract class KindCardBase extends EntityCardBase {
       ...ent,
       iconStyle: look.iconStyle,
       iconRing: look.iconRing,
+      ringColor: look.iconRingColor,
       visual: block,
       plot,
       // icon: false (the card's or a matching rule's): no icon

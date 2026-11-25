@@ -1005,6 +1005,8 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
             ...(shown.secondary !== undefined ? { default: shown.secondary } : {}),
           },
         ]),
+    // a poster's second value beside its value (another entity's state; its other keys in YAML)
+    ...(thing === "poster" && writes("aside") ? [{ name: "aside", selector: { entity: {} } }] : []),
     ...(format.length ? [heading("format_heading"), ...format] : []),
     ...(range.shown
       ? [
@@ -1055,6 +1057,10 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
               opt("plain", tr("style.plain")),
             ]),
           ),
+          // the entity the ring reads (none: the card's own value)
+          ...(iconThing !== "flow" && data.icon_ring === true
+            ? [{ name: "icon_ring_entity", selector: { entity: {} } }]
+            : []),
         ];
   const VISUAL_ORDER: readonly VisualThing[] = [
     "glow",

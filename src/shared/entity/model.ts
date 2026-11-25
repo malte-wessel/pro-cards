@@ -1,5 +1,6 @@
 // Formatting and the per-entity render model. Every function takes the card context
 // ctx = { hass, tplResult, ... } so it runs without a DOM element.
+import { ringProgressOf } from "./ring.ts";
 import {
   asText,
   membersOf,
@@ -68,6 +69,8 @@ export interface EntityModel {
   look: Look;
   fmt: FmtValue;
   progress: number | null;
+  // how far a ring that reads another entity is filled (`ringSrc`; null: no number there)
+  ring?: number | null;
   // a timer's time left (running or paused), where the card writes it as one
   countdown?: Countdown;
 }
@@ -304,6 +307,7 @@ export const modelOf = (ctx: FormatCtx, ent: EntityItem): EntityModel => {
     fmt: count?.fmt ?? fmtValue(ctx, ent, model, st),
     progress: progressOf(ent, model.num, st),
   };
+  if (ent.ringSrc) out.ring = ringProgressOf(ent.ringSrc, ctx.hass?.states[ent.ringSrc.entity]);
   // a timer's time left, as its value where it is shown and as its bar (the fills write both as it
   // runs down); no progress: the model stays the same while it runs, so what else reads one (a
   // gauge, a ring, a glow) would stand at the share of its last change

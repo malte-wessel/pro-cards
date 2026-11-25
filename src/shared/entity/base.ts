@@ -243,6 +243,8 @@ export abstract class EntityCardBase extends HTMLElement {
       );
     const readsOf = (e: EntityItem) => [
       ...idsOf(e),
+      // (the entity a ring around its icon reads)
+      ...(e.ringSrc ? [e.ringSrc.entity] : []),
       ...(e.pill ? [e.pill.icon, ...e.pill.ruleIcons.values()] : []).flatMap((i) =>
         i.src?.kind === "entity" ? [i.src.entity] : [],
       ),

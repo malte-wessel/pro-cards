@@ -80,7 +80,9 @@ describe("parseIcon", () => {
     expect(() => icon({ blur: 4 })).toThrow(
       "icon: blur is no option here (name, ring, style, src, variant, tap_action, hold_action, double_tap_action, badge)",
     );
-    expect(() => icon({ type: "icon", ring: "yes" })).toThrow("icon: ring must be true or false");
+    expect(() => icon({ type: "icon", ring: "yes" })).toThrow(
+      "icon: ring takes true, false, an entity id or { entity, … }",
+    );
     expect(() => icon({ type: "icon", name: "" })).toThrow("icon: name must be a text");
     expect(() => icon({ type: "image", src: 3 })).toThrow("icon: src must be a text");
     expect(() => icon({ type: "icon", style: "square" })).toThrow("icon: style must be one of");

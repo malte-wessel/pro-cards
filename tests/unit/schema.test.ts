@@ -546,6 +546,49 @@ describe("card config schemas", () => {
     ).toBeTruthy();
   });
 
+  it("checks a ring of another entity and a poster's second value", () => {
+    const H = "sensor.living_room_humidity",
+      B = "sensor.battery_soc";
+    for (const type of ["custom:poster-card-pro", "custom:tile-card-pro"]) {
+      const ok = (c: object, what: string) => expect(validate({ type, ...c }), what).toBeNull();
+      const bad = (c: object, what: string) => expect(validate({ type, ...c }), what).toBeTruthy();
+      for (const ring of [
+        true,
+        false,
+        B,
+        { entity: B, attribute: "level", min: 0, max: 80 },
+        { color: "orange" },
+      ])
+        ok({ entity: H, icon: { ring } }, `ring ${JSON.stringify(ring)}`);
+      for (const ring of ["battery", { max: 80 }, { entity: B, size: 2 }, 5])
+        bad({ entity: H, icon: { ring } }, `ring ${JSON.stringify(ring)}`);
+      // a rule switches the ring and colours it, it reads nothing else
+      ok({ entity: H, rules: [{ above: 50, icon: { ring: { color: "red" } } }] }, "rule's colour");
+      bad({ entity: H, rules: [{ above: 50, icon: { ring: B } }] }, "rule's entity");
+      // a badge's ring too
+      ok(
+        { entity: H, badges: [{ entity: H, icon: { ring: { entity: B, color: "orange" } } }] },
+        "badge's ring",
+      );
+      bad(
+        { entity: H, badges: [{ entity: H, rules: [{ above: 1, icon: { ring: B } }] }] },
+        "badge rule's entity",
+      );
+    }
+    const poster = (c: object) => validate({ type: "custom:poster-card-pro", entity: H, ...c });
+    for (const aside of [
+      false,
+      B,
+      { attribute: "temperature", decimals: 1 },
+      { entity: B, icon: "mdi:target", prefix: "→" },
+    ])
+      expect(poster({ aside }), JSON.stringify(aside)).toBeNull();
+    for (const aside of [true, { entity: B, color: "red" }, { entity: B, rules: [] }])
+      expect(poster({ aside }), JSON.stringify(aside)).toBeTruthy();
+    // a tile's line has no second value
+    expect(validate({ type: "custom:tile-card-pro", entity: H, aside: B })).toBeTruthy();
+  });
+
   it("checks the two places: the icon and the visual", () => {
     const H = "sensor.living_room_humidity";
     for (const type of ["custom:poster-card-pro", "custom:tile-card-pro"]) {

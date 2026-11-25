@@ -1220,3 +1220,65 @@ describe("the editor form: your own buttons", () => {
     ]);
   });
 });
+
+describe("the editor form: a ring of another entity and a second value", () => {
+  const TEMP = { type: "custom:poster-card-pro", entity: "sensor.living_room_temperature" };
+  const RING = { entity: "sensor.battery_soc", max: 80, color: "orange" };
+
+  it("shows the entity a ring reads, and keeps its other options as written", () => {
+    expect(formOf({ ...TEMP, icon: { ring: RING } })).toMatchObject({
+      icon_ring: true,
+      icon_ring_entity: "sensor.battery_soc",
+    });
+    expect(formOf({ ...TEMP, icon: { ring: "sensor.battery_soc" } }).icon_ring_entity).toBe(
+      "sensor.battery_soc",
+    );
+    // another entity: its options go on with it
+    expect(
+      edit({ ...TEMP, icon: { ring: RING } }, { icon_ring_entity: "sensor.phone_battery" }),
+    ).toMatchObject({ icon: { ring: { ...RING, entity: "sensor.phone_battery" } } });
+    // none: the card's own value, in the ring's colour (another entity's scale goes)
+    expect(edit({ ...TEMP, icon: { ring: RING } }, { icon_ring_entity: "" })).toMatchObject({
+      icon: { ring: { color: "orange" } },
+    });
+    // the shortest spelling of a new one
+    expect(edit(TEMP, { icon_ring: true, icon_ring_entity: "sensor.battery_soc" })).toMatchObject({
+      icon: { ring: "sensor.battery_soc" },
+    });
+    expect(edit(TEMP, { icon_ring: true })).toMatchObject({ icon: { ring: true } });
+    // a ring left as it was keeps its spelling
+    expect(edit({ ...TEMP, icon: { ring: RING } }, { name: "Bath" }).icon).toEqual({ ring: RING });
+  });
+
+  it("keeps a badge's ring of another entity in its YAML", () => {
+    const b = { entity: "sensor.living_room_temperature", icon: { ring: "sensor.battery_soc" } };
+    const item = badgeToForm(b);
+    expect(item.icon_ring).toBeUndefined();
+    expect(item.more).toEqual({ icon: { ring: "sensor.battery_soc" } });
+    expect(badgeFromForm(item)).toEqual(b);
+  });
+
+  it("writes a poster's second value from its entity, the rest as written", () => {
+    expect(formOf({ ...TEMP, aside: "sensor.outdoor_temperature" }).aside).toBe(
+      "sensor.outdoor_temperature",
+    );
+    expect(edit(TEMP, { aside: "sensor.outdoor_temperature" })).toMatchObject({
+      aside: "sensor.outdoor_temperature",
+    });
+    const written = { entity: "climate.living_room", attribute: "temperature", decimals: 1 };
+    expect(edit({ ...TEMP, aside: written }, { aside: "climate.bedroom" }).aside).toEqual({
+      ...written,
+      entity: "climate.bedroom",
+    });
+    // cleared: an attribute stays, reading the card's entity; nothing else to say, it goes
+    expect(edit({ ...TEMP, aside: written }, { aside: "" }).aside).toEqual({
+      attribute: "temperature",
+      decimals: 1,
+    });
+    expect(
+      edit({ ...TEMP, aside: "sensor.outdoor_temperature" }, { aside: "" }),
+    ).not.toHaveProperty("aside");
+    // the tile has none
+    expect(formOf({ ...TILE }, "tile")).not.toHaveProperty("aside");
+  });
+});

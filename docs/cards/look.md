@@ -158,7 +158,7 @@ The **icon** draws one of these:
 - `image`: a picture in the icon's circle;
 - `flow`: the wind's or the rain's animation.
 
-An `icon` or an `image` takes `ring: true`, a ring of the value around it. Every icon takes `style: plain`, the icon without its circle.
+An `icon` or an `image` takes `ring: true`, a ring of the value around it. `ring` can also read another entity: an entity id, or `{ entity, attribute, min, max, color }`, on that entity's scale (its own `min` and `max`, else 0 to 100), in the card's colour unless it names one. A rule switches the ring on and off and colours it, but never names another entity. Every icon takes `style: plain`, the icon without its circle.
 
 The **visual** draws one of these:
 
@@ -190,6 +190,14 @@ On a tile, a visual below the texts adds a second row.
   entity: sensor.phone_battery
   icon: { ring: true }
   visual: gauge
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: person.malte
+  icon: { ring: sensor.phone_battery }
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.living_room_temperature
+  icon: { ring: { entity: sensor.living_room_humidity, color: teal } }
   grid_options: { columns: 6 }
 ```
 
@@ -428,12 +436,12 @@ A rule needs at least one of `state`, `below` and `above`.
 | `image` | `src`, `name`, `ring`, `style` | A picture in the icon: the entity's, or `src`. `name` shows while there is none. |
 | `flow`  | `variant`, `style`             | The wind's or the rain's animation. Wind and rain kinds only.                    |
 
-| Option    | What it does                                                                  |
-| --------- | ----------------------------------------------------------------------------- |
-| `ring`    | `true`: a ring of the value around the icon, filled between `min` and `max`.  |
-| `style`   | `circle` (default) or `plain`, without the circle.                            |
-| `src`     | A URL, a template that renders one, or an entity whose picture it shows.      |
-| `variant` | Wind: `dots`, `lines`, `swoosh`, `vectors`. Rain: `drops`, `ripples`, `fill`. |
+| Option    | What it does                                                                                                                                                                                                                |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ring`    | `true`: a ring of the value around the icon, filled between `min` and `max`. An entity id or `{ entity, attribute, min, max, color }`: another entity's value, on its scale. `{ color }`: the value in a colour of its own. |
+| `style`   | `circle` (default) or `plain`, without the circle.                                                                                                                                                                          |
+| `src`     | A URL, a template that renders one, or an entity whose picture it shows.                                                                                                                                                    |
+| `variant` | Wind: `dots`, `lines`, `swoosh`, `vectors`. Rain: `drops`, `ripples`, `fill`.                                                                                                                                               |
 
 The icon also takes its own `tap_action`, `hold_action` and `double_tap_action` (see [Actions & hover](/cards/actions)), and on a tile a `badge` (see [Badges](/cards/badges)).
 

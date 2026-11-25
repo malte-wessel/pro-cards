@@ -329,7 +329,13 @@ export const badgeToForm = (x: unknown): Raw => {
   for (const [k, v] of Object.entries(o)) {
     if (k === "icon" && v === false) item.icon_type = "none";
     else if (k === "icon" && typeof v === "string") item.icon = v;
-    else if (k === "icon" && isObj(v) && only(v, ["type", "name", "ring", "src"])) {
+    // (a ring of another entity stays in the YAML, with the rest of its icon)
+    else if (
+      k === "icon" &&
+      isObj(v) &&
+      only(v, ["type", "name", "ring", "src"]) &&
+      (v.ring === undefined || typeof v.ring === "boolean")
+    ) {
       if (typeof v.type === "string") item.icon_type = v.type;
       if (typeof v.name === "string") item.icon = v.name;
       if (v.ring === true) item.icon_ring = true;
@@ -642,6 +648,14 @@ export const configToForm = (
     fill_height: c.fill_height !== false,
   };
   for (const k of TEXTS) d[k] = c[k] ?? "";
+  // a poster's second value: its entity (its other keys stay as written)
+  if (thing === "poster")
+    d.aside =
+      typeof c.aside === "string"
+        ? c.aside
+        : isObj(c.aside) && typeof c.aside.entity === "string"
+          ? c.aside.entity
+          : "";
   for (const k of ACTIONS) if (c[k] !== undefined) d[k] = actionToForm(c[k]);
 
   // the icon: its thing, its options, its own actions and (a tile's) badge
@@ -655,7 +669,14 @@ export const configToForm = (
     iconThing =
       typeof icon.type === "string" ? icon.type : icon.name !== undefined ? "icon" : DEFAULT;
     if (typeof icon.name === "string") d.icon = icon.name;
-    d.icon_ring = icon.ring === true;
+    // (a ring of another entity: its entity in the form, its other options kept as written)
+    d.icon_ring = icon.ring !== undefined && icon.ring !== false;
+    d.icon_ring_entity =
+      typeof icon.ring === "string"
+        ? icon.ring
+        : isObj(icon.ring) && typeof icon.ring.entity === "string"
+          ? icon.ring.entity
+          : "";
     d.icon_style = icon.style ?? "";
     d.icon_src = icon.src ?? "";
     d.icon_variant = icon.variant === kind.icon?.variant ? "" : (icon.variant ?? "");
@@ -750,8 +771,35 @@ export const configToForm = (
   return withDefaults(d);
 };
 
-// each part of the config from the form: undefined leaves it out (the kind's default)
-const iconFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknown => {
+// a poster's second value from the form's entity: the object as written keeps its other keys (an
+// attribute without an entity reads the card's); cleared, it is left out
+const asideFromForm = (entity: unknown, written: unknown): unknown => {
+  const e = filled(entity) ? entity : undefined;
+  if (!isObj(written)) return e;
+  const rest: Raw = { ...written };
+  delete rest.entity;
+  if (!e && rest.attribute === undefined && rest.value === undefined) return undefined;
+  return { ...(e ? { entity: e } : {}), ...rest };
+};
+// the ring as the form has it: true, an entity id, or its options as written with the form's entity
+// (another entity's attribute, min and max go with it; its colour stays)
+const ringFromForm = (data: HaFormData, written: unknown): unknown => {
+  const was = isObj(written) ? written.ring : undefined;
+  const rest: Raw = isObj(was) ? { ...was } : {};
+  delete rest.entity;
+  const entity = filled(data.icon_ring_entity) ? data.icon_ring_entity : undefined;
+  if (!entity) for (const k of ["attribute", "min", "max"]) delete rest[k];
+  if (Object.keys(rest).length) return { ...(entity ? { entity } : {}), ...rest };
+  return entity ?? true;
+};
+// each part of the config from the form: undefined leaves it out (the kind's default); `written`
+// is the icon as the config had it
+const iconFromForm = (
+  data: HaFormData,
+  kind: Kind,
+  thing: CardThing,
+  written?: unknown,
+): unknown => {
   if (data.icon_thing === "none") return false;
   const iconThing = (
     data.icon_thing === DEFAULT ? defaultIcon(kind) : data.icon_thing
@@ -759,7 +807,7 @@ const iconFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknown =
   const takes = ICON_OPTIONS[iconThing] ?? [];
   const o: Raw = {};
   if (takes.includes("name") && filled(data.icon)) o.name = data.icon;
-  if (takes.includes("ring") && data.icon_ring === true) o.ring = true;
+  if (takes.includes("ring") && data.icon_ring === true) o.ring = ringFromForm(data, written);
   if (takes.includes("style") && data.icon_style === "plain") o.style = "plain";
   if (takes.includes("src") && filled(data.icon_src)) o.src = data.icon_src;
   if (takes.includes("variant") && chosen(data.icon_variant)) o.variant = data.icon_variant;
@@ -996,7 +1044,9 @@ export const formToConfig = (
   for (const k of ACTIONS)
     if (JSON.stringify(data[k]) !== JSON.stringify(actionToForm(p[k])))
       setOrDrop(c, k, data[k], !isObj(data[k]));
-  if (changed("icon_", ["icon"])) put("icon", iconFromForm(data, kind, thing));
+  if (changed("icon_", ["icon"])) put("icon", iconFromForm(data, kind, thing, p.icon));
+  // a poster's second value: its entity from the form, its other keys as written
+  if (thing === "poster" && changed("aside")) put("aside", asideFromForm(data.aside, p.aside));
   if (changed("visual_")) put("visual", visualFromForm(data, kind, thing));
   if (changed("input_")) put("inputs", inputsFromForm(data, kind, isObj(p.inputs) ? p.inputs : {}));
   if (changed("series")) {

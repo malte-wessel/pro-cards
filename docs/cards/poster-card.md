@@ -8,7 +8,7 @@ A poster is half a section wide and three rows high. Its content sits at the bot
 
 - the **icon** at the top left: the entity's icon or picture, or the kind's own drawing.
 - the **badges** at the top right. The first is the **status badge**: the kind's status or the matching rule's.
-- the **name** in capitals, the large **value**, and a line under it with what the kind adds.
+- the **name** in capitals, the large **value** with a smaller **second value** beside it where one is set (a thermostat's target), and a line under it with what the kind adds.
 - the **controls** beside the value, or under it on a narrow card: a light's switch and dimmer, a thermostat's stepper.
 - the **visual**: along the bottom (a plot of the last hours, the forecast, a battery's segments) or behind it all (a light's glow, a picture, the wind's animation).
 
@@ -95,6 +95,28 @@ Every part has a key of its own: `name`, `icon`, `color`, `value`, `status`, `vi
 
 :::
 
+## A second value
+
+`aside` puts a second value beside the value, smaller and in the grey of the secondary text: a target beside a temperature, a forecast high, yesterday's total. Give it an entity, or `{ entity, attribute, … }` with a badge's value keys; without an entity it reads the card's own (`aside: { attribute: temperature }` on a thermostat). A thermostat shows its target there by itself where no stepper does; `aside: false` turns it off.
+
+Where the line is too narrow, the second value moves under the value, or is left out where a line is already there: the value never gets smaller for it.
+
+::: live
+
+```yaml
+- type: custom:poster-card-pro
+  entity: sensor.living_room_temperature
+  name: Living room
+  aside: { entity: climate.living_room, attribute: temperature }
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: climate.living_room
+  control: false
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ## An unavailable entity
 
 While its entity is unavailable, a poster draws a dash for the value, its status says Unavailable and its controls are greyed out. An entity that does not exist draws the same, its status naming the missing entity.
@@ -142,6 +164,7 @@ Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to 
 | `format`                  | `auto`                       | How the value is written: `auto` (a timer: its time left as a clock), `power`, `duration`, `clock` or `relative`; see [Badges](/cards/badges#format-and-staleness).                     |
 | `prefix`, `suffix`        | –                            | Text before and after the value.                                                                                                                                                        |
 | `min`, `max`              | the entity's, else 0 and 100 | The range of a bar, a gauge, segments, a glow or the icon's ring. Written, they also scale a plot of the entity's state (`sparkline`, `columns`) that has no `min` or `max` of its own. |
+| `aside`                   | the kind's                   | A second value beside the value: an entity id, `{ entity, attribute, value, unit, decimals, format, prefix, icon }`, or `false` for none. Without an entity it reads the card's.        |
 | `secondary`               | the kind's                   | The line under the value. Template allowed.                                                                                                                                             |
 | `status`                  | the rule's, else the kind's  | The status badge, first in the corner: a text, a template, or `false` for none. It wins over the rules.                                                                                 |
 | `show_name`, `show_value` | `true`                       | `false` leaves out the name or the value.                                                                                                                                               |
