@@ -10,6 +10,7 @@ const sv: Translation = {
   "common.plus_hours": "+{n} h",
   "common.minus_hours": "−{n} h",
   "common.hours": "{n} h",
+  "common.today": "I dag",
 
   "entity.peak": "Topp",
   "control.toggle": "Växla {name}",

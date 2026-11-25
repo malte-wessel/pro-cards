@@ -799,7 +799,7 @@
         },
         "axis": {
           "type": "boolean",
-          "description": "sparkline, columns: the plot's axes"
+          "description": "sparkline, columns: a row above the drawing with the scale's range and the window, in the plot's own height"
         },
         "smoothing": {
           "type": "number",

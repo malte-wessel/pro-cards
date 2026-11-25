@@ -21,7 +21,7 @@ import { qs, startOfDay } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
 import { PLOT_H, type HistoryVisual } from "../constants.ts";
 import { resolveLook } from "../look.ts";
-import { fmtNumber, fmtTime, tplGetter, type RenderCtx } from "../model.ts";
+import { fmtNumber, fmtTime, tplGetter, unitOf, type RenderCtx } from "../model.ts";
 
 // what a plot element knows about itself: entity, index, kind, state and height. The optional
 // keys let a card plot something else than the entity's history window (a forecast: its own
@@ -92,34 +92,53 @@ export const addLabel = (
 // the labels' distance from the plot's sides: a plot runs to the card's edges, its labels keep to
 // the card's padding
 const INSET = 12;
-// `axis: true` (the v3 cards' visual): faint lines at the scale's top and bottom with their values
-// on the left, the window's start and now on the right (top and bottom). Labels lie over the plot;
-// a plot too short for two lines of them shows the top value and now alone
-const axisLabels = (
+// `axis: true` (the v3 cards' visual): a row of labels at the top of the plot's own height, above
+// the drawing (the plot never grows for it, and nothing is drawn over the columns or the line): the
+// scale as a range on the left, the window on the right; faint lines at the scale's edges. The
+// row's height follows the theme's text; 0 where no axis is asked for, or where the plot is too
+// short to keep 16 px of drawing below it
+const axisBand = (ctx: RenderCtx, plot: PlotElement, labels: HTMLElement, H: number) => {
+  if (!plot._ctx.axis) return 0;
+  const band = Math.ceil(measure(ctx.text, labels, ["label"], [10, 12]).line) + 2;
+  return H - band >= 16 ? band : 0;
+};
+const axisRow = (
   ctx: RenderCtx,
   plot: PlotElement,
   labels: HTMLElement,
-  lines: { v: number; y: number }[],
+  band: number,
+  scale: { bottom: number; top: number },
+  lines: number[],
   W: number,
-  H: number,
   t0: number,
   now: number,
 ): string => {
-  if (!plot._ctx.axis) return "";
-  const fmt = (v: number) => fmtNumber(ctx, plot._ctx.ent, v, plot._ctx.st);
-  const line = measure(ctx.text, labels, ["label"], [10, 12]).line;
-  const both = H >= line * 3;
-  let html = "";
-  lines.forEach(({ v, y }, i) => {
-    html += `<line class="grid" x1="0" x2="${W}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
-    if (i > 0 && !both) return;
-    const top = i === 0 ? y + 1 : y - line - 1;
-    addLabel(labels, "axis", fmt(v), INSET, Math.max(0, Math.min(H - line, top)));
-  });
-  const n = Math.round((now - t0) / 3600e3);
-  if (both) addLabel(labels, "axis right", tr(ctx.hass, "common.minus_hours", { n }), W - INSET, 1);
-  addLabel(labels, "axis right", tr(ctx.hass, "common.now"), W - INSET, H - line - 2);
-  return html;
+  if (!band) return "";
+  const { ent, st } = plot._ctx;
+  const num = (v: number) => fmtNumber(ctx, ent, v, st, false);
+  const unit = unitOf(ent, st);
+  // a range with a negative end keeps its dash apart from the minus
+  const sep = scale.bottom < 0 || scale.top < 0 ? " – " : "–";
+  addLabel(
+    labels,
+    "axis",
+    `${num(scale.bottom)}${sep}${num(scale.top)}${unit ? ` ${unit}` : ""}`,
+    INSET,
+    1,
+  );
+  // the window: its hours (the right edge is now), or today since midnight
+  addLabel(
+    labels,
+    "axis right",
+    plot._ctx.hours === "today"
+      ? tr(ctx.hass, "common.today")
+      : tr(ctx.hass, "common.hours", { n: Math.round((now - t0) / 3600e3) }),
+    W - INSET,
+    1,
+  );
+  return lines
+    .map((y) => `<line class="grid" x1="0" x2="${W}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"/>`)
+    .join("");
 };
 
 // ctx also needs { cfg, series, fetched, now, t0 }; `size` is the plot's box when the caller
@@ -177,27 +196,17 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
       0.1,
     );
     const { lo, hi } = sc;
-    const yOf = (v: number) => 4 + (H - 8) * (1 - (v - lo) / (hi - lo));
+    // below the axis' row, where there is one
+    const band = axisBand(ctx, plot, labels, H);
+    const yOf = (v: number) => band + 4 + (H - band - 8) * (1 - (v - lo) / (hi - lo));
     const xy = sampled.map((p) => [+xOf(p.t).toFixed(1), +yOf(p.v).toFixed(1)]);
     const d = smoothPath(xy);
     const last = xy[xy.length - 1];
-    const axis = axisLabels(
-      ctx,
-      plot,
-      labels,
-      [
-        { v: sc.top, y: yOf(sc.top) },
-        { v: sc.bottom, y: yOf(sc.bottom) },
-      ],
-      W,
-      H,
-      t0,
-      now,
-    );
+    const axis = axisRow(ctx, plot, labels, band, sc, [yOf(sc.top), yOf(sc.bottom)], W, t0, now);
     svg.innerHTML =
       axis +
       `<path class="area" d="${d} L${last[0]},${H} L${xy[0][0]},${H} Z"/><path class="line" d="${d}"/><circle class="dot" cx="${last[0]}" cy="${last[1]}" r="3.5"/>` +
-      `<g class="hover"><line class="hair" y1="0" y2="${H}"/><circle class="dot" r="4"/></g>`;
+      `<g class="hover"><line class="hair" y1="${band}" y2="${H}"/><circle class="dot" r="4"/></g>`;
     plot._sampled = sampled;
     plot._yOf = yOf;
     plot._buckets = null;
@@ -224,7 +233,9 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
     const sc = plotScale(vals, plot._ctx, true, 0);
     const vmax = sc.top,
       range = sc.hi - sc.lo;
-    const yOf = (v: number) => H * (1 - (v - sc.lo) / range),
+    // below the axis' row, where there is one
+    const band = axisBand(ctx, plot, labels, H);
+    const yOf = (v: number) => band + (H - band) * (1 - (v - sc.lo) / range),
       y0 = yOf(sc.base);
     let peak = -1,
       pv = -Infinity;
@@ -244,11 +255,10 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
       return i === peak ? 1 : vmax > 0 && v >= 0.66 * vmax ? 0.7 : 0.4;
     };
     const gap = Math.min(3, bw * 0.25);
-    // the top of the scale; a written scale that does not start at 0 names its bottom too
-    const lines = [{ v: vmax, y: yOf(vmax) }];
-    if (sc.fixed && sc.bottom !== 0 && sc.bottom !== sc.top)
-      lines.push({ v: sc.bottom, y: yOf(sc.bottom) });
-    let html = axisLabels(ctx, plot, labels, lines, W, H, t0, now);
+    // a line at the scale's top; a written scale that does not start at 0 marks its bottom too
+    const lines = [yOf(vmax)];
+    if (sc.fixed && sc.bottom !== 0 && sc.bottom !== sc.top) lines.push(yOf(sc.bottom));
+    let html = axisRow(ctx, plot, labels, band, sc, lines, W, t0, now);
     buckets.forEach((b, i) => {
       if (!b) return;
       const y = Math.min(yOf(b.v), y0),
@@ -256,7 +266,7 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
       const op = opOf(b.v, i);
       html += `<rect class="col" x="${(i * bw + gap / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(1, bw - gap).toFixed(1)}" height="${h.toFixed(1)}" rx="2" opacity="${op}"/>`;
     });
-    html += `<g class="hover"><rect class="hl" y="-1" width="${(Math.max(1, bw - gap) + 2).toFixed(1)}" height="${H + 2}" rx="3"/></g>`;
+    html += `<g class="hover"><rect class="hl" y="${band - 1}" width="${(Math.max(1, bw - gap) + 2).toFixed(1)}" height="${H - band + 2}" rx="3"/></g>`;
     svg.innerHTML = html;
     plot._buckets = buckets;
     plot._sampled = null;

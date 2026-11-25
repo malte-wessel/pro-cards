@@ -10,6 +10,7 @@ const ru: Translation = {
   "common.plus_hours": "+{n} ч",
   "common.minus_hours": "−{n} ч",
   "common.hours": "{n} ч",
+  "common.today": "Сегодня",
 
   "entity.peak": "Пик",
   "control.toggle": "Переключить {name}",

@@ -180,3 +180,27 @@ describe("a plot's scale", () => {
     expect(tallest(scaled("columns", {}, attr))).toBe(0);
   });
 });
+
+describe("a plot's axis", () => {
+  const labels = (el: HTMLElement) =>
+    [...el.querySelectorAll(".label.axis")].map((l) => l.textContent);
+  it("writes the scale's range and the window in a row above the drawing", () => {
+    const el = scaled("columns", { max: 100, axis: true });
+    expect(labels(el)).toEqual(["0–100", "1 h"]);
+    // the plot keeps its height; the columns are drawn below the row, the line at its foot
+    const svg = el.querySelector("svg")!;
+    expect(Number(svg.getAttribute("viewBox")!.split(" ")[3])).toBe(120);
+    const band = Number(el.querySelector("line.grid")!.getAttribute("y1"));
+    expect(band).toBeGreaterThan(10);
+    for (const c of cols(el)) expect(c.y).toBeGreaterThanOrEqual(band - 0.1);
+    expect(tallest(scaled("columns", { max: 3, axis: true }))).toBeCloseTo(band, 0);
+  });
+  it("names today's window by its day", () => {
+    expect(labels(scaled("sparkline", { hours: "today", axis: true }))[1]).toBe("Today");
+  });
+  it("draws no row without axis", () => {
+    const el = scaled("columns", { max: 100 });
+    expect(labels(el)).toEqual([]);
+    expect(el.querySelector("line.grid")).toBeNull();
+  });
+});

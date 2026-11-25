@@ -552,18 +552,12 @@ test.describe("tile places", () => {
       { type: T, entity: "sensor.living_room_temperature", visual: "sparkline" },
     ]);
     const axis = (i: number) => card(page, i).locator(".row.tile > .plot .label.axis");
-    // the scale's values on the left, the window's start and now on the right
-    await expect(card(page, 0).locator(".plot .label.axis.right").first()).toBeAttached();
-    const right = await card(page, 0).locator(".plot .label.axis.right").allTextContents();
-    expect(right).toContain("now");
-    expect(right.some((t) => /6 h/.test(t))).toBe(true);
+    // a row above the drawing: the scale's range on the left, the window on the right
+    await expect(card(page, 0).locator(".plot .label.axis.right")).toHaveText("6 h");
+    const range = (i: number) => card(page, i).locator(".plot .label.axis:not(.right)");
+    await expect(range(0)).toHaveText(/^-?[\d.,]+–[\d.,]+ W$/);
     // drawn from the power's history: the same scale as the power's own sparkline
-    const nums = async (i: number) =>
-      (await axis(i).allTextContents())
-        .filter((t) => /\d/.test(t) && !/ h$/.test(t))
-        .map((t) => Math.round(Number(t.replace(/[^\d.-]/g, ""))));
-    await expect.poll(() => nums(0)).not.toEqual([]);
-    expect(await nums(0)).toEqual(await nums(1));
+    expect(await range(0).textContent()).toBe(await range(1).textContent());
     // no axes unless asked
     await expect(card(page, 2).locator(".row.tile > .plot")).toHaveCount(1);
     await expect(axis(2)).toHaveCount(0);

@@ -9,6 +9,7 @@ const en = {
   "common.plus_hours": "+{n} h",
   "common.minus_hours": "−{n} h",
   "common.hours": "{n} h",
+  "common.today": "Today",
 
   "entity.peak": "Peak",
   "control.toggle": "Toggle {name}",
