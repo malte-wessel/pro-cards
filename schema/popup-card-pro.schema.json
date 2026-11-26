@@ -37,6 +37,35 @@
       "default": "auto",
       "description": "How tall it opens: auto, as tall as its cards (on a phone the sheet can be dragged up to the full height); full, as tall as it may be"
     },
+    "section": {
+      "type": "object",
+      "description": "A section of a dashboard whose cards come first in the pop-up, before its own cards: found by its heading (title) or its place (index, from 0) in a view",
+      "properties": {
+        "dashboard": {
+          "type": "string",
+          "description": "The dashboard's address (its url_path, e.g. dashboard-rooms). Default: the dashboard the pop-up is on"
+        },
+        "view": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "integer", "minimum": 0 }
+          ],
+          "description": "The view's path, or its number from 0. Default: the pop-up's own view on its own dashboard, else the first"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The section's heading (its first heading card), whatever its case"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The section's place among the view's sections, from 0"
+        }
+      },
+      "anyOf": [{ "required": ["title"] }, { "required": ["index"] }],
+      "additionalProperties": false
+    },
     "cards": {
       "type": "array",
       "items": {

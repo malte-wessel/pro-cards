@@ -1087,6 +1087,14 @@ describe("card config schemas", () => {
     expect(same({ type: PU, hash: "a", width: "wide", height: "full" })).toBe(true);
     expect(same({ type: PU, hash: "a", width: "huge" })).toBe(false);
     expect(same({ type: PU, hash: "a", height: "half" })).toBe(false);
+    for (const section of [
+      { title: "Kitchen" },
+      { dashboard: "dashboard-rooms", view: "rooms", title: "Kitchen" },
+      { view: 0, index: 1 },
+    ])
+      expect(same({ type: PU, hash: "a", section }), JSON.stringify(section)).toBe(true);
+    for (const section of [{ view: "rooms" }, { title: "K", room: 1 }, { index: -1 }, "Kitchen"])
+      expect(same({ type: PU, hash: "a", section }), JSON.stringify(section)).toBe(false);
     // a pop-up inside a layout card is checked against its own schema
     expect(validate({ type: "custom:layout-card-pro", cards: [{ type: PU }] })).not.toBeNull();
   });

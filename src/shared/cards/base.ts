@@ -74,6 +74,10 @@ export abstract class CardsBase extends HTMLElement {
   _mount(wrap: HTMLElement) {
     (this.shadowRoot as ShadowRoot).appendChild(wrap);
   }
+  // a note the card shows wherever it is (a pop-up's section it could not find), null: none
+  _message(): string | null {
+    return null;
+  }
   // whether the card hides itself: every card inside hidden (it leaves no gap in the section),
   // never in the editor's preview
   _hideSelf(shown: boolean[]): boolean {
@@ -307,10 +311,11 @@ export abstract class CardsBase extends HTMLElement {
   _relayout() {
     if (!this._body || !this._root || !this._childConfigs()) return;
     const shown = this._arrange(this._viewColumns());
-    this._note!.hidden = !(this._failed || (this._preview && !this._kids.length));
+    const message = this._message();
+    this._note!.hidden = !(this._failed || message || (this._preview && !this._kids.length));
     this._note!.textContent = this._failed
       ? t(this._hass, "layout.unavailable")
-      : t(this._hass, this._emptyKey());
+      : (message ?? t(this._hass, this._emptyKey()));
     const hide = this._hideSelf(shown);
     if (hide !== this._selfHidden) {
       this._selfHidden = hide;
