@@ -104,6 +104,9 @@ const nb: Translation = {
   "popup.open": "Åpne",
   "popup.close": "Lukk",
   "popup.name": "Popup-vindu",
+  "popup.section_missing": "Ingen seksjon «{section}» i det dashbordet og den visningen",
+  "popup.section_generated": "Det dashbordet lages av en strategi: det har ingen seksjoner å vise",
+  "popup.section_unreadable": "Det dashbordet kunne ikke leses",
   "group.stub_title": "Gruppe",
   "sections.stub_title": "Seksjon",
   "heading.stub_title": "Overskrift",
@@ -1007,6 +1010,15 @@ const nb: Translation = {
   "editor.cards.width.full": "Full bredde",
   "editor.cards.popup_height.auto": "Så høy som kortene",
   "editor.cards.popup_height.full": "Full høyde",
+  "editor.cards.section_source": "Seksjon fra et dashbord",
+  "editor.cards.field.section_dashboard": "Dashbord",
+  "editor.cards.field.section_view": "Visning",
+  "editor.cards.field.section_title": "Seksjon",
+  "editor.cards.help.section_dashboard": "Adressen, f.eks. dashboard-rom. Tomt: dette dashbordet",
+  "editor.cards.help.section_view":
+    "Banen eller nummeret, fra 0. Tomt: denne visningen, ellers den første",
+  "editor.cards.help.section_title":
+    "Seksjonens overskrift. Kortene kommer før popup-vinduets egne",
   "editor.cards.help.hash":
     "En naviger-handling til #kjokken åpner popup-vinduet med hashen kjokken",
   "editor.cards.help.width": "På en bred skjerm; en telefon viser et ark nedenfra",

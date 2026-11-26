@@ -1,6 +1,7 @@
 // Builds the `hass` object the cards expect, backed by the demo world, and wires the
 // document-level events HA would normally handle (actions, more-info, navigation, toasts).
 import { SONGS, world } from "./world.ts";
+import { DASHBOARDS } from "./dashboards.ts";
 import { hsToRgb, kelvinToRgb } from "../../../../src/shared/color.ts";
 import { parseHms } from "../../../../src/shared/countdown.ts";
 import { AREAS, DEVICES, ENTITIES, FLOORS, formatEntityName } from "./registry.ts";
@@ -941,6 +942,13 @@ export const snapshot = (): HassSnapshot => ({
     }
     if (msg.type === "recorder/get_statistics_metadata")
       return world.statisticsMetadata(msg.statistic_ids || []) as T;
+    // a dashboard's config (a pop-up's section): the demo's, Home Assistant's error for another
+    if (msg.type === "lovelace/config") {
+      const d = DASHBOARDS[String(msg.url_path ?? "")];
+      if (!d)
+        throw Object.assign(new Error("Unknown config specified"), { code: "config_not_found" });
+      return JSON.parse(JSON.stringify(d)) as T;
+    }
     throw new Error(`unsupported ws ${msg.type}`);
   },
   connection,

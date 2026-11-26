@@ -104,6 +104,9 @@ const es: Translation = {
   "popup.open": "Abrir",
   "popup.close": "Cerrar",
   "popup.name": "Ventana emergente",
+  "popup.section_missing": "No hay ninguna sección «{section}» en ese panel y esa vista",
+  "popup.section_generated": "Ese panel lo genera una estrategia: no tiene secciones que mostrar",
+  "popup.section_unreadable": "No se pudo leer ese panel",
   "group.stub_title": "Grupo",
   "sections.stub_title": "Sección",
   "heading.stub_title": "Encabezado",
@@ -1011,6 +1014,16 @@ const es: Translation = {
   "editor.cards.width.full": "Ancho completo",
   "editor.cards.popup_height.auto": "Tan alta como sus tarjetas",
   "editor.cards.popup_height.full": "Altura completa",
+  "editor.cards.section_source": "Sección de un panel",
+  "editor.cards.field.section_dashboard": "Panel",
+  "editor.cards.field.section_view": "Vista",
+  "editor.cards.field.section_title": "Sección",
+  "editor.cards.help.section_dashboard":
+    "Su dirección, p. ej. dashboard-habitaciones. Vacío: este panel",
+  "editor.cards.help.section_view":
+    "Su ruta o número, desde 0. Vacío: esta vista, si no la primera",
+  "editor.cards.help.section_title":
+    "El encabezado de la sección. Sus tarjetas van antes de las de la ventana",
   "editor.cards.help.hash": "Una acción de navegar a #cocina abre la ventana con el hash cocina",
   "editor.cards.help.width": "En una pantalla ancha; un móvil muestra una hoja desde abajo",
   "editor.cards.help.unfold":

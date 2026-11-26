@@ -5,6 +5,7 @@
 import { checks, isObj } from "../shared/cards/checks.ts";
 import type { CardConfigBase } from "../shared/ha.ts";
 import { normalizeVisibility, type Visibility } from "../shared/visibility.ts";
+import type { SectionRef } from "./section.ts";
 
 export const CARD_TYPE = "popup-card-pro";
 export const HEADING_TYPE = "custom:heading-card-pro";
@@ -22,6 +23,8 @@ export interface PopupConfig {
   // the header's heading card, null without a title, subtitle, icon or badges
   header: CardConfigBase | null;
   cards: CardConfigBase[];
+  // a section of a dashboard whose cards come first, null: the pop-up's own cards only
+  section: SectionRef | null;
   // Home Assistant's `visibility` of the card: while it does not hold, the pop-up does not open
   visibility: Visibility;
 }
@@ -29,7 +32,36 @@ export interface PopupConfig {
 const HEADER_KEYS = ["title", "subtitle", "icon", "badges"] as const;
 const HASH = /^[A-Za-z0-9_-]+$/;
 
-const { err, pickOf, cardList } = checks(CARD_TYPE);
+const { err, pickOf, int, cardList } = checks(CARD_TYPE);
+
+// `section: { dashboard, view, title | index }`: a section of a dashboard as the pop-up's cards
+export const parseSection = (v: unknown): SectionRef | null => {
+  if (v === undefined || v === null) return null;
+  if (!isObj(v))
+    throw err("'section' must be { dashboard, view, title } (title: the section's heading)");
+  for (const k of Object.keys(v))
+    if (!["dashboard", "view", "title", "index"].includes(k))
+      throw err(`'section.${k}' is not a section option: dashboard, view, title or index`);
+  const text = (k: string) => {
+    const x = v[k];
+    if (x === undefined || x === null || x === "") return null;
+    if (typeof x !== "string") throw err(`'section.${k}' must be text`);
+    return x.trim() || null;
+  };
+  // a dashboard as its address shows it: "/dashboard-rooms" is "dashboard-rooms"
+  const dashboard = text("dashboard")?.replace(/^\/+|\/+$/g, "") || null;
+  const view = v.view;
+  if (view !== undefined && view !== null && typeof view !== "string") int(view, "section.view", 0);
+  const ref: SectionRef = {
+    dashboard,
+    view: view === undefined || view === null || view === "" ? null : (view as string | number),
+    title: text("title"),
+    index: v.index === undefined || v.index === null ? null : int(v.index, "section.index", 0),
+  };
+  if (ref.title === null && ref.index === null)
+    throw err("'section' needs its 'title' (the section's heading) or its 'index' (from 0)");
+  return ref;
+};
 
 // the hash as written, without its # ("#kitchen" and "kitchen" are the same pop-up)
 export const parseHash = (v: unknown): string => {
@@ -66,6 +98,7 @@ export const normalizePopupConfig = (raw: unknown): PopupConfig => {
     height: raw.height === undefined ? "auto" : pickOf(HEIGHTS, raw.height, "height"),
     header: Object.keys(head).length ? { type: HEADING_TYPE, style: "title", ...head } : null,
     cards: cardList(raw.cards),
+    section: parseSection(raw.section),
     visibility: visibilityOf(raw.visibility),
   };
 };

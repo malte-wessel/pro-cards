@@ -104,6 +104,10 @@ const nl: Translation = {
   "popup.open": "Openen",
   "popup.close": "Sluiten",
   "popup.name": "Pop-up",
+  "popup.section_missing": "Geen sectie ‘{section}’ op dat dashboard en die weergave",
+  "popup.section_generated":
+    "Dat dashboard wordt door een strategie gemaakt: het heeft geen secties om te tonen",
+  "popup.section_unreadable": "Dat dashboard kon niet worden gelezen",
   "group.stub_title": "Groep",
   "sections.stub_title": "Sectie",
   "heading.stub_title": "Kop",
@@ -1011,6 +1015,15 @@ const nl: Translation = {
   "editor.cards.width.full": "Volle breedte",
   "editor.cards.popup_height.auto": "Zo hoog als de kaarten",
   "editor.cards.popup_height.full": "Volle hoogte",
+  "editor.cards.section_source": "Sectie van een dashboard",
+  "editor.cards.field.section_dashboard": "Dashboard",
+  "editor.cards.field.section_view": "Weergave",
+  "editor.cards.field.section_title": "Sectie",
+  "editor.cards.help.section_dashboard": "Het adres, bijv. dashboard-kamers. Leeg: dit dashboard",
+  "editor.cards.help.section_view":
+    "Het pad of nummer, vanaf 0. Leeg: deze weergave, anders de eerste",
+  "editor.cards.help.section_title":
+    "De kop van de sectie. Haar kaarten komen vóór die van de pop-up",
   "editor.cards.help.hash": "Een navigeeractie naar #keuken opent de pop-up met de hash keuken",
   "editor.cards.help.width": "Op een breed scherm; een telefoon toont een paneel van onderen",
   "editor.cards.help.unfold":

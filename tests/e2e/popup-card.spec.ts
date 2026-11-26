@@ -234,6 +234,63 @@ test.describe("popup-card-pro", () => {
     ]);
   });
 
+  test("shows a section of a dashboard: its heading as the header, its cards, then its own", async ({
+    page,
+  }) => {
+    const section = { dashboard: "dashboard-rooms", view: "rooms", title: "Kitchen" };
+    await mount(
+      page,
+      [opener("kitchen"), { type: PU, hash: "kitchen", section, cards: [tile("light.office")] }],
+      { width: 400 },
+    );
+    await openBy(page, "kitchen");
+    const sheet = page.locator(".pro-cards-popup .sheet");
+    await expect(sheet).toHaveAttribute("aria-label", "Kitchen");
+    await expect(sheet.locator(".heading hui-heading-card")).toHaveCount(1);
+    const entities = () =>
+      page.evaluate(() =>
+        [
+          ...document
+            .querySelector(".pro-cards-popup")!
+            .shadowRoot!.querySelectorAll(".body > .item hui-card"),
+        ].map(
+          (h) =>
+            (h.firstElementChild as unknown as { _config?: { entities?: { entity: string }[] } })
+              ?._config?.entities?.[0]?.entity,
+        ),
+      );
+    await expect
+      .poll(entities)
+      .toEqual([
+        "light.kitchen",
+        "sensor.kitchen_temperature",
+        "climate.kitchen",
+        "media_player.kitchen_speaker",
+        "light.office",
+      ]);
+  });
+
+  test("says so when its section is not there", async ({ page }) => {
+    const section = { dashboard: "dashboard-rooms", view: "rooms", title: "Garage" };
+    await mount(page, [opener("garage"), { type: PU, hash: "garage", title: "Garage", section }], {
+      width: 400,
+    });
+    await openBy(page, "garage");
+    await expect(page.locator(".pro-cards-popup .note")).toHaveText(
+      "No section “Garage” on that dashboard and view",
+    );
+    await page.keyboard.press("Escape");
+    await mount(
+      page,
+      [opener("x"), { type: PU, hash: "x", title: "X", section: { dashboard: "nope", index: 0 } }],
+      { width: 400 },
+    );
+    await openBy(page, "x");
+    await expect(page.locator(".pro-cards-popup .note")).toHaveText(
+      "That dashboard could not be read",
+    );
+  });
+
   test("height: full opens the dialog as tall as it may be", async ({ page }) => {
     await mount(page, [opener("living-room"), popup({ height: "full" })], { width: 400 });
     await openBy(page);
@@ -312,4 +369,35 @@ test.describe("popup-card-pro on a phone", () => {
     await expect.poll(async () => (await actions(page)).length).toBe(before + 1);
     expect(s.open).toBe(1);
   });
+
+  // the browser's click after a tap would land on the open pop-up: on its scrim (closing it at
+  // once) or on one of its cards; the opener under the scrim, then under the sheet
+  for (const [where, above] of [
+    ["the scrim", 0],
+    ["the sheet", 18],
+  ] as const)
+    test(`a tap opens it and leaves it open, its click not on ${where}`, async ({ page }) => {
+      const fill = Array.from({ length: above }, () => tile("sensor.kitchen_temperature"));
+      await mount(page, [...fill, opener("living-room"), popup()]);
+      const b = (await page.getByRole("button", { name: "Open living-room" }).boundingBox())!;
+      await page.evaluate(() => {
+        const w = window as unknown as { clicks: number };
+        w.clicks = 0;
+        document.addEventListener(
+          "click",
+          (e) => {
+            if (e.composedPath().some((n) => (n as Element).classList?.contains("pro-cards-popup")))
+              w.clicks++;
+          },
+          true,
+        );
+      });
+      await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2);
+      await page.waitForTimeout(500);
+      const s = await state(page);
+      expect(s).toMatchObject({ open: 1, hash: "#living-room" });
+      // (where the finger was: above the sheet, or on it)
+      expect(b.y + b.height / 2 > s.top!).toBe(above > 0);
+      expect(await page.evaluate(() => (window as unknown as { clicks: number }).clicks)).toBe(0);
+    });
 });

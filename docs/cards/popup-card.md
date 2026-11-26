@@ -54,6 +54,39 @@ The cards sit in Home Assistant's section grid, 12 columns wide: each spans what
 
 The cards are made with the dashboard, so they open at once, but they only listen to Home Assistant while the pop-up is open.
 
+## A section of a dashboard
+
+`section` fills the pop-up with a section of a dashboard: its cards, in the section's grid, as you laid them out there. Build a room's section once, on a dashboard of rooms, and open it as a pop-up from every view, each with a pop-up card of three lines.
+
+::: live width=400
+
+```yaml
+type: custom:layout-card-pro
+cards:
+  - type: custom:tile-card-pro
+    entity: sensor.kitchen_temperature
+    name: Kitchen
+    tap_action:
+      action: navigate
+      navigation_path: "#kitchen"
+  - type: custom:popup-card-pro
+    hash: kitchen
+    section:
+      dashboard: dashboard-rooms
+      view: rooms
+      title: Kitchen
+```
+
+:::
+
+- `dashboard` is the dashboard's address, as in its URL (`dashboard-rooms`; `lovelace` is the default dashboard). Left out, it is the dashboard the pop-up is on.
+- `view` is the view's path, or its number from 0. Left out, it is the view the pop-up is on where the section is on the pop-up's dashboard, else the dashboard's first.
+- `title` is the section's heading, the text of its first heading card, whatever its case. Or `index` picks a section by its place, from 0.
+
+A pop-up without a `title`, `subtitle`, `icon` or `badges` of its own takes the section's heading as its header, beside the close button; with them, the section's heading stays above its cards. The pop-up's own `cards`, if any, come after the section's. When the dashboard is saved, the pop-up takes the section as it is now. The section's own `visibility` belongs to its dashboard and does not hide the pop-up's cards. A pop-up card in the section is left out: a pop-up does not open inside another.
+
+The demo home has a dashboard `dashboard-rooms` with a view `rooms`: a section for the living room, the kitchen and the bedroom.
+
 ## The header
 
 `title`, `subtitle`, `icon` and `badges` make the pop-up's header, a [heading](/cards/heading-card) with its badges, as on the heading card. Leave them all out for a pop-up with only the close button above its cards.
@@ -86,22 +119,23 @@ While you edit the dashboard, the pop-up shows on it as a card, with its header 
 
 ## The visual editor
 
-The editor has the pop-up's hash, width and height, title, subtitle, icon and badges, then a tab per card with the card's own editor, as in Home Assistant's stacks. "+" adds a card.
+The editor has the pop-up's hash, width and height, title, subtitle, icon and badges, the section of a dashboard it shows, then a tab per card with the card's own editor, as in Home Assistant's stacks. "+" adds a card.
 
 ## Reference
 
 ### Card options
 
-| Option     | Default  | Description                                                                                           |
-| ---------- | -------- | ----------------------------------------------------------------------------------------------------- |
-| `hash`     | –        | Required. Opens the pop-up on `#<hash>`: letters, digits, `-` and `_`.                                |
-| `title`    | –        | The header's title. Template allowed.                                                                 |
-| `subtitle` | –        | The line under the title. Template allowed.                                                           |
-| `icon`     | –        | The icon before the title.                                                                            |
-| `badges`   | –        | The header's [badges](/cards/badges), as on the [heading card](/cards/heading-card).                  |
-| `width`    | `normal` | On a wide screen: `normal`, `wide` or `full`. A phone always shows the sheet across its width.        |
-| `height`   | `auto`   | `auto`: as tall as its cards (a sheet can be dragged up to the full height); `full`: the full height. |
-| `cards`    | `[]`     | The cards, in Home Assistant's section grid.                                                          |
+| Option     | Default  | Description                                                                                                    |
+| ---------- | -------- | -------------------------------------------------------------------------------------------------------------- |
+| `hash`     | –        | Required. Opens the pop-up on `#<hash>`: letters, digits, `-` and `_`.                                         |
+| `title`    | –        | The header's title. Template allowed.                                                                          |
+| `subtitle` | –        | The line under the title. Template allowed.                                                                    |
+| `icon`     | –        | The icon before the title.                                                                                     |
+| `badges`   | –        | The header's [badges](/cards/badges), as on the [heading card](/cards/heading-card).                           |
+| `width`    | `normal` | On a wide screen: `normal`, `wide` or `full`. A phone always shows the sheet across its width.                 |
+| `height`   | `auto`   | `auto`: as tall as its cards (a sheet can be dragged up to the full height); `full`: the full height.          |
+| `cards`    | `[]`     | The cards, in Home Assistant's section grid.                                                                   |
+| `section`  | –        | `{ dashboard, view, title }` or `{ dashboard, view, index }`: a section of a dashboard whose cards come first. |
 
 ### Grid and Home Assistant options
 

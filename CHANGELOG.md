@@ -7,6 +7,7 @@ _Beta_
 ### What's new
 
 - **New pop-up card** (`custom:popup-card-pro`): cards in a pop-up that a tap opens, any card's navigate action to its hash (`navigation_path: "#kitchen"`). On a phone it is a sheet from the bottom you drag up to the full height and down to close (`height: full` opens it at the full height), on a wide screen a dialog; the back button closes it, and while closed it takes no room on the dashboard. A heading of its title, icon and badges on top, its cards in the section grid. [Pop-up](https://malte-wessel.github.io/pro-cards/cards/popup-card)
+- **A section of a dashboard as a pop-up:** `section: { dashboard, view, title }` fills a pop-up with a section's cards, so a room laid out once on a dashboard of rooms opens from every view; saving that dashboard updates the pop-up. [Pop-up](https://malte-wessel.github.io/pro-cards/cards/popup-card#a-section-of-a-dashboard)
 - **New schedule card** (`custom:schedule-card-pro`): a schedule helper's week, with when it changes next and each block's data. [Schedule](https://malte-wessel.github.io/pro-cards/cards/schedule-card)
 - **Edit a schedule on the card** with a mouse, a finger or the keyboard: select, move, copy, resize and draw blocks across days; Done saves the week in one go. [Editing](https://malte-wessel.github.io/pro-cards/cards/schedule-card#editing-on-the-card)
 - **Schedules on tiles and posters:** the new `schedule` kind shows when it changes next and the day's blocks. [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#schedule)
@@ -25,6 +26,7 @@ _Beta_
 
 ### Fixes
 
+- A tap on a tile or a poster on a phone that opens a pop-up no longer closes it again at once or presses one of its cards: the browser's click after the tap, which landed on the pop-up opened under the finger, is not sent, as on Home Assistant's own cards.
 - A plot of another entity (`src`) writes that entity's unit and precision in its tooltip and axis, also on a card whose value is an attribute (a thermostat's temperature): it showed "16" for "16.0 %". Its tooltip no longer names the card's rules, which are written for the card's own value.
 - A poster's and a tile's columns stand on the card's bottom edge on square feet: the card cut off their lowest 4 px, so a small value (under 7 % of the plot) showed no column at all.
 
