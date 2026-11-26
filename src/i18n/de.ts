@@ -100,6 +100,10 @@ const de: Translation = {
   "swipe.empty": "Karten zum Durchwischen hinzufügen",
   "swipe.page": "Seite {n} von {total}",
   "swipe.cards": "Karten",
+  "popup.empty": "Karten zum Pop-up hinzufügen",
+  "popup.open": "Öffnen",
+  "popup.close": "Schließen",
+  "popup.name": "Pop-up",
   "group.stub_title": "Gruppe",
   "sections.stub_title": "Abschnitt",
   "heading.stub_title": "Überschrift",
@@ -998,6 +1002,17 @@ const de: Translation = {
   "editor.cards.help.breakpoints":
     "Eine Ansichtsspalte ist eine Spalte der Abschnittsansicht, etwa 500 px: Ein Handy zeigt eine, ein Abschnitt mit column_span 2 umfasst zwei. Diese Optionen gelten, sobald der Abschnitt so viele umfasst",
   "editor.cards.help.per_page": "Eine Bruchzahl lässt die nächste Karte hereinragen",
+  "editor.cards.field.hash": "Hash",
+  "editor.cards.field.subtitle": "Untertitel",
+  "editor.cards.field.width": "Breite",
+  "editor.cards.width.normal": "Normal",
+  "editor.cards.width.wide": "Breit",
+  "editor.cards.width.full": "Volle Breite",
+  "editor.cards.popup_height.auto": "So hoch wie seine Karten",
+  "editor.cards.popup_height.full": "Volle Höhe",
+  "editor.cards.help.hash":
+    "Eine Navigieren-Aktion zu #kueche öffnet das Pop-up mit dem Hash kueche",
+  "editor.cards.help.width": "Auf einem breiten Bildschirm; ein Handy zeigt ein Blatt von unten",
   "editor.cards.help.unfold":
     "Ein Raster mit so vielen Spalten statt des Streifens; 0 behält den Streifen",
   "editor.cards.help.order":

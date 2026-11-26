@@ -70,6 +70,15 @@ export abstract class CardsBase extends HTMLElement {
   abstract _arrange(columns: number): boolean[];
   // the card's own nodes besides the body (wrap holds the probe, the body and the note)
   _buildExtra(_wrap: HTMLElement) {}
+  // where the wrap goes: the card's shadow root (a pop-up puts it into its sheet)
+  _mount(wrap: HTMLElement) {
+    (this.shadowRoot as ShadowRoot).appendChild(wrap);
+  }
+  // whether the card hides itself: every card inside hidden (it leaves no gap in the section),
+  // never in the editor's preview
+  _hideSelf(shown: boolean[]): boolean {
+    return !this._preview && this._kids.length > 0 && !shown.some(Boolean);
+  }
 
   constructor() {
     super();
@@ -188,7 +197,7 @@ export abstract class CardsBase extends HTMLElement {
     const wrap = document.createElement("div");
     wrap.className = "root";
     wrap.innerHTML = `<div class="probe"></div><div class="body"></div><div class="note" hidden></div>`;
-    root.appendChild(wrap);
+    this._mount(wrap);
     this._root = wrap;
     if (this._probe) this._ro?.unobserve(this._probe);
     this._probe = wrap.querySelector<HTMLElement>(".probe")!;
@@ -302,8 +311,7 @@ export abstract class CardsBase extends HTMLElement {
     this._note!.textContent = this._failed
       ? t(this._hass, "layout.unavailable")
       : t(this._hass, this._emptyKey());
-    // every card hidden: the container hides too (it leaves no gap in the section)
-    const hide = !this._preview && this._kids.length > 0 && !shown.some(Boolean);
+    const hide = this._hideSelf(shown);
     if (hide !== this._selfHidden) {
       this._selfHidden = hide;
       this.toggleAttribute("hidden", hide);

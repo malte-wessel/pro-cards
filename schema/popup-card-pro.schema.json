@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/popup-card-pro.schema.json",
+  "title": "custom:popup-card-pro",
+  "description": "Any cards in a pop-up that opens when the address ends in its hash (a navigate action to \"#kitchen\"): a sheet from the bottom on a phone, dragged down to close, a dialog on a wide screen. Takes no room on the dashboard while closed.",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "custom:popup-card-pro"
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^#?[A-Za-z0-9_-]+$",
+      "description": "The address part that opens the pop-up: hash: kitchen opens on #kitchen (a navigate action with navigation_path: \"#kitchen\")"
+    },
+    "title": {
+      "$ref": "heading-card-pro.schema.json#/properties/title"
+    },
+    "subtitle": {
+      "$ref": "heading-card-pro.schema.json#/properties/subtitle"
+    },
+    "icon": {
+      "$ref": "heading-card-pro.schema.json#/properties/icon"
+    },
+    "badges": {
+      "$ref": "heading-card-pro.schema.json#/properties/badges"
+    },
+    "width": {
+      "type": "string",
+      "enum": ["normal", "wide", "full"],
+      "default": "normal",
+      "description": "How wide the dialog is on a wide screen; a phone always shows a sheet across its width"
+    },
+    "height": {
+      "type": "string",
+      "enum": ["auto", "full"],
+      "default": "auto",
+      "description": "How tall it opens: auto, as tall as its cards (on a phone the sheet can be dragged up to the full height); full, as tall as it may be"
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "$ref": "layout-card-pro.schema.json#/$defs/card"
+      },
+      "description": "The cards, in Home Assistant's section grid: each spans the columns its grid options ask for (a tile half the width)"
+    },
+    "grid_options": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/grid_options"
+    },
+    "visibility": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/visibility"
+    },
+    "layout_options": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/layout_options"
+    },
+    "view_layout": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/view_layout"
+    },
+    "card_mod": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod"
+    },
+    "uix": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/uix"
+    }
+  },
+  "required": ["type", "hash"],
+  "unevaluatedProperties": false
+}

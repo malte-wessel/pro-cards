@@ -48,7 +48,9 @@ export const createCard = (cfg: CardConfigBase): CardElement => {
 export const mountGrid = async (
   container: HTMLElement,
   cards: unknown[],
-  { fullWidth = false }: { fullWidth?: boolean } = {},
+  // preview: the cards as in Home Assistant's card editor (the Playground), where a container shows
+  // what it hides on a dashboard (a pop-up inline, every card whatever its visibility)
+  { fullWidth = false, preview = false }: { fullWidth?: boolean; preview?: boolean } = {},
 ): Promise<MountHandle> => {
   const hass = await loadRuntime();
   container.textContent = "";
@@ -71,6 +73,7 @@ export const mountGrid = async (
     const cell = document.createElement("div");
     cell.className = "cell";
     const el = createCard(cfg);
+    if (preview) (el as CardElement & { preview?: boolean }).preview = true;
     el.hass = hass.snapshot();
     const { columns, rows } = cellSize(el.getGridOptions?.(), cfg);
     cell.style.gridColumn = `span ${fullWidth ? 12 : columns}`;

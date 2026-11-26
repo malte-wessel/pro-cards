@@ -100,6 +100,10 @@ const it: Translation = {
   "swipe.empty": "Aggiungi schede da scorrere",
   "swipe.page": "Pagina {n} di {total}",
   "swipe.cards": "Schede",
+  "popup.empty": "Aggiungi schede al pop-up",
+  "popup.open": "Apri",
+  "popup.close": "Chiudi",
+  "popup.name": "Pop-up",
   "group.stub_title": "Gruppo",
   "sections.stub_title": "Sezione",
   "heading.stub_title": "Intestazione",
@@ -1000,6 +1004,17 @@ const it: Translation = {
   "editor.cards.help.breakpoints":
     "Una colonna di vista è una colonna della vista a sezioni, circa 500 px: un telefono ne mostra una, una sezione con column_span 2 ne occupa due. Queste opzioni valgono quando la sezione ne occupa tante",
   "editor.cards.help.per_page": "Una frazione lascia intravedere la scheda successiva",
+  "editor.cards.field.hash": "Hash",
+  "editor.cards.field.subtitle": "Sottotitolo",
+  "editor.cards.field.width": "Larghezza",
+  "editor.cards.width.normal": "Normale",
+  "editor.cards.width.wide": "Larga",
+  "editor.cards.width.full": "Larghezza piena",
+  "editor.cards.popup_height.auto": "Alta quanto le sue schede",
+  "editor.cards.popup_height.full": "Altezza piena",
+  "editor.cards.help.hash":
+    "Un'azione di navigazione verso #cucina apre il pop-up con l'hash cucina",
+  "editor.cards.help.width": "Su uno schermo largo; un telefono mostra un pannello dal basso",
   "editor.cards.help.unfold":
     "Una griglia di questo numero di colonne al posto della striscia; 0 mantiene la striscia",
   "editor.cards.help.order":

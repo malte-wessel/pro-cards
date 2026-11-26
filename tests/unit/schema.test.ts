@@ -6,6 +6,7 @@ import { docExamples, walk } from "./docs-examples.ts";
 import { PRESETS } from "../../docs/.vitepress/theme/presets.ts";
 import { normalizeLayoutConfig } from "../../src/layout/config.ts";
 import { normalizeSwipeConfig } from "../../src/swipe/config.ts";
+import { normalizePopupConfig } from "../../src/popup/config.ts";
 import { normalizeTileGroupConfig } from "../../src/tile-group/config.ts";
 import { KIND_NAMES } from "../../src/shared/kinds/registry.ts";
 import { TARGET_KEYS } from "../../src/shared/entity/targets.ts";
@@ -1064,6 +1065,30 @@ describe("card config schemas", () => {
     expect(same({ type: SW, unfold: false }, normalizeSwipeConfig)).toBe(true);
     // the form of the first betas
     expect(same({ type: SW, unfold: { from: 2, columns: 4 } }, normalizeSwipeConfig)).toBe(false);
+  });
+
+  it("agrees with the pop-up card on its hash, width and height", () => {
+    const PU = "custom:popup-card-pro";
+    const same = (cfg: Record<string, unknown>) => {
+      let card = true;
+      try {
+        normalizePopupConfig(cfg);
+      } catch {
+        card = false;
+      }
+      expect(validate(cfg) === null, JSON.stringify(cfg)).toBe(card);
+      return card;
+    };
+    for (const hash of ["kitchen", "#kitchen", "living-room_2"])
+      expect(same({ type: PU, hash })).toBe(true);
+    for (const hash of ["living room", "", "#", "küche"])
+      expect(same({ type: PU, hash })).toBe(false);
+    expect(same({ type: PU })).toBe(false);
+    expect(same({ type: PU, hash: "a", width: "wide", height: "full" })).toBe(true);
+    expect(same({ type: PU, hash: "a", width: "huge" })).toBe(false);
+    expect(same({ type: PU, hash: "a", height: "half" })).toBe(false);
+    // a pop-up inside a layout card is checked against its own schema
+    expect(validate({ type: "custom:layout-card-pro", cards: [{ type: PU }] })).not.toBeNull();
   });
 
   it("rejects energy flow cards that read power sensors", () => {

@@ -20,6 +20,7 @@ body:
         - energy-flow-card-pro
         - layout-card-pro
         - swipe-card-pro
+        - popup-card-pro
         - entity-card-pro (deprecated)
         - entity-group-card-pro (deprecated)
         - entity-sections-card-pro (deprecated)

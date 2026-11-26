@@ -8,6 +8,7 @@ export const EDITABLE = new Set([
   "custom:poster-card-pro",
   "custom:layout-card-pro",
   "custom:swipe-card-pro",
+  "custom:popup-card-pro",
   "custom:tile-group-card-pro",
   "custom:heading-card-pro",
   "custom:sun-azimuth-card-pro",

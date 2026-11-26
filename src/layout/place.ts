@@ -4,11 +4,8 @@ import { pick } from "./breakpoints.ts";
 import type { ChildPlace, LayoutOptions, Responsive } from "./config.ts";
 import type { GridOptions } from "../shared/ha.ts";
 import { distribute, tallest } from "./masonry.ts";
-import { themeGap } from "../shared/cards/units.ts";
+import { rowsHeight, themeGap } from "../shared/cards/units.ts";
 import { trackCountOf, trackList } from "./units.ts";
-
-// one row of Home Assistant's sections grid: a card that asks for rows gets them in this unit
-export const ROW_HEIGHT = "var(--ha-section-grid-row-height, 56px)";
 
 export interface KidState {
   place: ChildPlace;
@@ -135,7 +132,7 @@ export const planLayout = (o: LayoutOptions, kids: KidState[], columns: number):
       n === null ? "1 / -1" : start !== null ? `${start} / span ${n}` : `span ${n}`;
     if (rows) {
       s["grid-row"] = `span ${rows}`;
-      s.height = `calc(${rows} * ${ROW_HEIGHT} + ${rows - 1} * ${gap.row})`;
+      s.height = rowsHeight(rows, gap.row);
     }
     // HA's "grid" mode makes a card fill its cell: only a card with fixed rows gets it (in an
     // auto row a core tile would take a height of its own instead of its content's)

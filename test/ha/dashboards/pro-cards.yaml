@@ -32,6 +32,40 @@ views:
             title: Living room
             icon: mdi:sofa
             tiles: [light.living_room, cover.living_room_blinds, sensor.living_room_temperature]
+      # the pop-up: opened by Home Assistant's own tile and by ours; it sits between them and leaves
+      # no gap while closed; a tile inside opens more-info, which must show above it
+      - type: grid
+        cards:
+          - type: custom:heading-card-pro
+            title: Pop-up
+            icon: mdi:dock-window
+          - type: tile
+            entity: light.living_room
+            name: Living room (core tile)
+            tap_action: { action: navigate, navigation_path: "#living-room" }
+          - type: custom:popup-card-pro
+            hash: living-room
+            title: Living room
+            icon: mdi:sofa
+            badges: [sensor.living_room_temperature]
+            cards:
+              - { type: custom:tile-card-pro, entity: light.living_room }
+              - { type: custom:tile-card-pro, entity: light.kitchen }
+              - {
+                  type: custom:tile-card-pro,
+                  entity: cover.living_room_blinds,
+                  grid_options: { columns: 12 },
+                }
+              - {
+                  type: custom:tile-card-pro,
+                  entity: sensor.living_room_temperature,
+                  visual: sparkline,
+                  grid_options: { columns: 12 },
+                }
+          - type: custom:tile-card-pro
+            entity: light.living_room
+            name: Living room (Pro tile)
+            tap_action: { action: navigate, navigation_path: "#living-room" }
       # schedules: the card edits the ones made in the UI (an administrator), not the YAML one
       - type: grid
         cards:
