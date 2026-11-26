@@ -665,11 +665,13 @@ export abstract class EntityCardBase extends HTMLElement {
       held = false,
       down = false,
       lastTap = 0,
-      tapTimer: ReturnType<typeof setTimeout> | undefined;
+      tapTimer: ReturnType<typeof setTimeout> | undefined,
+      touched = false;
     el.addEventListener("pointerdown", (ev) => {
       if (ev.button !== 0) return;
       held = false;
       down = true;
+      touched = ev.pointerType === "touch";
       clearTimeout(holdTimer);
       holdTimer = setTimeout(() => {
         held = true;
@@ -683,7 +685,18 @@ export abstract class EntityCardBase extends HTMLElement {
       down = false;
     };
     el.addEventListener("pointerleave", cancel);
-    el.addEventListener("pointercancel", cancel);
+    el.addEventListener("pointercancel", () => {
+      cancel();
+      touched = false;
+    });
+    // After a tap the browser sends mouse events and a click to whatever is under the finger by
+    // then: what the tap opened (a pop-up's scrim, one of its cards). A finger's press cancels its
+    // touchend, as Home Assistant's cards do, so they are not sent (it comes after the pointerup
+    // that ran the action).
+    el.addEventListener("touchend", (ev) => {
+      if (touched && ev.cancelable) ev.preventDefault();
+      touched = false;
+    });
     el.addEventListener("pointerup", (ev) => {
       if (ev.button !== 0 || !down) return;
       down = false;

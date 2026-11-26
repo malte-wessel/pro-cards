@@ -26,6 +26,7 @@ _Beta_
 
 ### Fixes
 
+- A tap on a tile or a poster on a phone that opens a pop-up no longer closes it again at once or presses one of its cards: the browser's click after the tap, which landed on the pop-up opened under the finger, is not sent, as on Home Assistant's own cards.
 - A plot of another entity (`src`) writes that entity's unit and precision in its tooltip and axis, also on a card whose value is an attribute (a thermostat's temperature): it showed "16" for "16.0 %". Its tooltip no longer names the card's rules, which are written for the card's own value.
 - A poster's and a tile's columns stand on the card's bottom edge on square feet: the card cut off their lowest 4 px, so a small value (under 7 % of the plot) showed no column at all.
 

@@ -369,4 +369,35 @@ test.describe("popup-card-pro on a phone", () => {
     await expect.poll(async () => (await actions(page)).length).toBe(before + 1);
     expect(s.open).toBe(1);
   });
+
+  // the browser's click after a tap would land on the open pop-up: on its scrim (closing it at
+  // once) or on one of its cards; the opener under the scrim, then under the sheet
+  for (const [where, above] of [
+    ["the scrim", 0],
+    ["the sheet", 18],
+  ] as const)
+    test(`a tap opens it and leaves it open, its click not on ${where}`, async ({ page }) => {
+      const fill = Array.from({ length: above }, () => tile("sensor.kitchen_temperature"));
+      await mount(page, [...fill, opener("living-room"), popup()]);
+      const b = (await page.getByRole("button", { name: "Open living-room" }).boundingBox())!;
+      await page.evaluate(() => {
+        const w = window as unknown as { clicks: number };
+        w.clicks = 0;
+        document.addEventListener(
+          "click",
+          (e) => {
+            if (e.composedPath().some((n) => (n as Element).classList?.contains("pro-cards-popup")))
+              w.clicks++;
+          },
+          true,
+        );
+      });
+      await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2);
+      await page.waitForTimeout(500);
+      const s = await state(page);
+      expect(s).toMatchObject({ open: 1, hash: "#living-room" });
+      // (where the finger was: above the sheet, or on it)
+      expect(b.y + b.height / 2 > s.top!).toBe(above > 0);
+      expect(await page.evaluate(() => (window as unknown as { clicks: number }).clicks)).toBe(0);
+    });
 });
