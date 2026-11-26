@@ -1,5 +1,7 @@
 /* Home Assistant default theme tokens, scoped to the live example frames. */
 .ha-theme {
+  /* the pop-up card over the site's bars and sidebar, below the more-info stand-in and toasts */
+  --pro-cards-popup-z-index: 900;
   --primary-color: #009ac7;
   --accent-color: #ff9800;
   --primary-text-color: #141414;

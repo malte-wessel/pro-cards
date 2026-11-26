@@ -100,6 +100,10 @@ const nl: Translation = {
   "swipe.empty": "Voeg kaarten toe om doorheen te vegen",
   "swipe.page": "Pagina {n} van {total}",
   "swipe.cards": "Kaarten",
+  "popup.empty": "Voeg kaarten toe aan de pop-up",
+  "popup.open": "Openen",
+  "popup.close": "Sluiten",
+  "popup.name": "Pop-up",
   "group.stub_title": "Groep",
   "sections.stub_title": "Sectie",
   "heading.stub_title": "Kop",
@@ -999,6 +1003,16 @@ const nl: Translation = {
   "editor.cards.help.breakpoints":
     "Een weergavekolom is één kolom van de sectieweergave, ongeveer 500 px: een telefoon toont er één, een sectie met column_span 2 beslaat er twee. Deze opties gelden zodra de sectie er zoveel beslaat",
   "editor.cards.help.per_page": "Met een breuk piept de volgende kaart er net in",
+  "editor.cards.field.hash": "Hash",
+  "editor.cards.field.subtitle": "Ondertitel",
+  "editor.cards.field.width": "Breedte",
+  "editor.cards.width.normal": "Normaal",
+  "editor.cards.width.wide": "Breed",
+  "editor.cards.width.full": "Volle breedte",
+  "editor.cards.popup_height.auto": "Zo hoog als de kaarten",
+  "editor.cards.popup_height.full": "Volle hoogte",
+  "editor.cards.help.hash": "Een navigeeractie naar #keuken opent de pop-up met de hash keuken",
+  "editor.cards.help.width": "Op een breed scherm; een telefoon toont een paneel van onderen",
   "editor.cards.help.unfold":
     "Een raster met zoveel kolommen in plaats van de strook; 0 houdt de strook",
   "editor.cards.help.order":

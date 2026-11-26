@@ -46,6 +46,7 @@ Dashboard cards that look like they belong in Home Assistant: tiles, posters and
 | Sun azimuth | `custom:sun-azimuth-card-pro` | Where the sun is around your house, and the sides it shines on.                     |
 | Layout      | `custom:layout-card-pro`      | Cards in a grid or masonry inside a section, rearranged by its width.               |
 | Swipe       | `custom:swipe-card-pro`       | Cards in a strip you swipe through.                                                 |
+| Pop-up      | `custom:popup-card-pro`       | Cards in a pop-up a tap opens, a sheet you swipe away on a phone.                   |
 
 The entity, entity group, entity sections, wind, rain and illuminance cards are deprecated and go in 4.0; [Moving to 3.0](https://malte-wessel.github.io/pro-cards/guide/migrating) maps them to the new cards.
 

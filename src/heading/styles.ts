@@ -70,7 +70,7 @@ const STYLE_HEADING = `
   .header.bpos-below .hvals { flex: 1 0 100%; justify-content: flex-start; }
   /* a narrow card: the badges at the end move to a line of their own */
   @container (max-width: 300px) {
-    .header.bpos-end:not(.align-center) { display: flex; flex-wrap: wrap; }
+    .header.bpos-end:not(.align-center) { display: flex; flex-wrap: wrap; column-gap: 10px; }
     .header.bpos-end:not(.align-center) > :is(ha-icon, .hline, .hvals) { margin-left: 0; margin-right: 0; }
     .header.bpos-end .hvals { flex: 1 0 100%; justify-content: flex-start; }
   }

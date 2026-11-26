@@ -761,6 +761,9 @@ const handleAction = (node: EventTarget | null, config: HassActionConfig, kind: 
       break;
     case "navigate":
       if (a.navigation_path) {
+        // the scroll in the entry it leaves, as VitePress's own links keep it: going back (a pop-up
+        // closing, the back button) puts the page where it was instead of at its top
+        history.replaceState({ ...(history.state ?? {}), scrollPosition: window.scrollY }, "");
         history.pushState(null, "", String(a.navigation_path));
         window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
       }

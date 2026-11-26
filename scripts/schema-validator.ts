@@ -26,6 +26,7 @@ const TYPES = [
   "energy-flow-card-pro",
   "layout-card-pro",
   "swipe-card-pro",
+  "popup-card-pro",
 ];
 
 export const makeValidator = () => {

@@ -95,7 +95,7 @@ const render = async () => {
   emit("warnings", warned);
   try {
     if (!props.cards.length) throw new Error("No card yet: pick an example or write one");
-    const h = await mountGrid(host.value, props.cards, { fullWidth: false });
+    const h = await mountGrid(host.value, props.cards, { fullWidth: false, preview: true });
     if (mine !== current) {
       h.dispose();
       return;

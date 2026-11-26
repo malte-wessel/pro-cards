@@ -51,7 +51,7 @@ const liveContainer = (md: MarkdownIt) => {
 const base = "/pro-cards/";
 const site = `https://malte-wessel.github.io${base}`;
 const description =
-  "Beautiful, customizable cards for Home Assistant dashboards: tiles, posters and tile groups for every kind of entity, headings, layout and swipe cards, weather, multi trend, sun path and power and energy flow cards that look like they belong in Home Assistant.";
+  "Beautiful, customizable cards for Home Assistant dashboards: tiles, posters and tile groups for every kind of entity, headings, layout, swipe and pop-up cards, weather, multi trend, sun path and power and energy flow cards that look like they belong in Home Assistant.";
 
 // the site's sections: the sidebar lists them all, the nav the same without the old cards. The
 // tile and the poster share their topic pages: each concept once, shown on both
@@ -75,6 +75,7 @@ const arrange = [
   { text: "Heading", link: "/cards/heading-card" },
   { text: "Layout", link: "/cards/layout-card" },
   { text: "Swipe", link: "/cards/swipe-card" },
+  { text: "Pop-up", link: "/cards/popup-card" },
 ];
 const energy = [
   { text: "Power flow", link: "/cards/power-flow-card" },

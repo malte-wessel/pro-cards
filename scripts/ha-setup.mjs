@@ -2,6 +2,7 @@
 // registers the bundle (dist/, mounted at /config/www/pro-cards) as a dashboard resource and
 // writes the showcase dashboards, through the same REST and websocket calls the frontend uses.
 // Node 22, no deps.
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 
 const BASE = process.env.HA_URL ?? "http://localhost:8123";
@@ -115,15 +116,31 @@ async function connect(token) {
   };
 }
 
-// the bundle as a dashboard resource (Settings → Dashboards → Resources), once
+// the bundle as a dashboard resource (Settings → Dashboards → Resources), its URL versioned by
+// the bundle's content: Home Assistant serves /local for 31 days, so a browser (a phone, the
+// companion app) keeps an old bundle through a reload; a new version is a new URL. Run the setup
+// again after a build to hand every browser the new bundle.
 async function ensureResource(token) {
+  const hash = createHash("sha256")
+    .update(await readFile(new URL("../dist/pro-cards.js", import.meta.url)))
+    .digest("hex")
+    .slice(0, 10);
+  const url = `${RESOURCE}?v=${hash}`;
   const c = await connect(token);
   const resources = await c.send({ type: "lovelace/resources" });
-  if (resources.some((r) => r.url.split("?")[0] === RESOURCE)) {
-    console.log(`resource ${RESOURCE}: present`);
+  const ours = resources.find((r) => r.url.split("?")[0] === RESOURCE);
+  if (ours?.url === url) console.log(`resource ${url}: present`);
+  else if (ours) {
+    await c.send({
+      type: "lovelace/resources/update",
+      resource_id: ours.id,
+      res_type: "module",
+      url,
+    });
+    console.log(`resource ${url}: updated`);
   } else {
-    await c.send({ type: "lovelace/resources/create", res_type: "module", url: RESOURCE });
-    console.log(`resource ${RESOURCE}: added`);
+    await c.send({ type: "lovelace/resources/create", res_type: "module", url });
+    console.log(`resource ${url}: added`);
   }
   c.close();
 }

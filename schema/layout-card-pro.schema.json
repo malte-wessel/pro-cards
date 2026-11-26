@@ -452,7 +452,8 @@
                   "custom:power-flow-card-pro",
                   "custom:energy-flow-card-pro",
                   "custom:layout-card-pro",
-                  "custom:swipe-card-pro"
+                  "custom:swipe-card-pro",
+                  "custom:popup-card-pro"
                 ]
               }
             }
@@ -703,6 +704,19 @@
           },
           "then": {
             "$ref": "swipe-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:popup-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "popup-card-pro.schema.json"
           }
         }
       ]

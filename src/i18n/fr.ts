@@ -100,6 +100,10 @@ const fr: Translation = {
   "swipe.empty": "Ajoutez des cartes à faire défiler",
   "swipe.page": "Page {n} sur {total}",
   "swipe.cards": "Cartes",
+  "popup.empty": "Ajoutez des cartes à la fenêtre",
+  "popup.open": "Ouvrir",
+  "popup.close": "Fermer",
+  "popup.name": "Fenêtre contextuelle",
   "group.stub_title": "Groupe",
   "sections.stub_title": "Section",
   "heading.stub_title": "Titre",
@@ -1001,6 +1005,17 @@ const fr: Translation = {
   "editor.cards.help.breakpoints":
     "Une colonne de vue est une colonne de la vue en sections, environ 500 px : un téléphone en montre une, une section avec column_span 2 en couvre deux. Ces options s'appliquent dès que la section en couvre autant",
   "editor.cards.help.per_page": "Une fraction laisse apparaître la carte suivante",
+  "editor.cards.field.hash": "Hash",
+  "editor.cards.field.subtitle": "Sous-titre",
+  "editor.cards.field.width": "Largeur",
+  "editor.cards.width.normal": "Normale",
+  "editor.cards.width.wide": "Large",
+  "editor.cards.width.full": "Pleine largeur",
+  "editor.cards.popup_height.auto": "Aussi haute que ses cartes",
+  "editor.cards.popup_height.full": "Pleine hauteur",
+  "editor.cards.help.hash":
+    "Une action de navigation vers #cuisine ouvre la fenêtre au hash cuisine",
+  "editor.cards.help.width": "Sur un écran large ; un téléphone affiche un panneau depuis le bas",
   "editor.cards.help.unfold":
     "Une grille de ce nombre de colonnes au lieu de la bande ; 0 garde la bande",
   "editor.cards.help.order":

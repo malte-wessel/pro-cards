@@ -100,6 +100,10 @@ const nb: Translation = {
   "swipe.empty": "Legg til kort å sveipe gjennom",
   "swipe.page": "Side {n} av {total}",
   "swipe.cards": "Kort",
+  "popup.empty": "Legg til kort i popup-vinduet",
+  "popup.open": "Åpne",
+  "popup.close": "Lukk",
+  "popup.name": "Popup-vindu",
   "group.stub_title": "Gruppe",
   "sections.stub_title": "Seksjon",
   "heading.stub_title": "Overskrift",
@@ -995,6 +999,17 @@ const nb: Translation = {
   "editor.cards.help.breakpoints":
     "En visningskolonne er én kolonne i seksjonsvisningen, rundt 500 px: en telefon viser én, en seksjon med column_span 2 spenner over to. Disse valgene gjelder når seksjonen spenner over så mange",
   "editor.cards.help.per_page": "En brøk lar neste kort titte frem",
+  "editor.cards.field.hash": "Hash",
+  "editor.cards.field.subtitle": "Undertittel",
+  "editor.cards.field.width": "Bredde",
+  "editor.cards.width.normal": "Normal",
+  "editor.cards.width.wide": "Bred",
+  "editor.cards.width.full": "Full bredde",
+  "editor.cards.popup_height.auto": "Så høy som kortene",
+  "editor.cards.popup_height.full": "Full høyde",
+  "editor.cards.help.hash":
+    "En naviger-handling til #kjokken åpner popup-vinduet med hashen kjokken",
+  "editor.cards.help.width": "På en bred skjerm; en telefon viser et ark nedenfra",
   "editor.cards.help.unfold":
     "Et rutenett med så mange kolonner i stedet for stripen; 0 beholder stripen",
   "editor.cards.help.order":

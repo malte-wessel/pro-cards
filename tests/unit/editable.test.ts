@@ -17,6 +17,7 @@ describe("the cards the Playground edits visually", () => {
       "custom:heading-card-pro",
       "custom:layout-card-pro",
       "custom:multi-trend-card-pro",
+      "custom:popup-card-pro",
       "custom:poster-card-pro",
       "custom:power-flow-card-pro",
       "custom:schedule-card-pro",

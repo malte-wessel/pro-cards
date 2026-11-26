@@ -2457,6 +2457,64 @@ for (const theme of THEMES) {
   });
 }
 
+// the pop-up card: inline in the editor's preview, and open: a sheet from the bottom on a phone, a
+// dialog on a wide screen (over the page, in the theme of where the card is)
+const PU = {
+  type: "custom:popup-card-pro",
+  hash: "living-room",
+  title: "Living room",
+  icon: "mdi:sofa",
+  badges: ["sensor.living_room_temperature"],
+  cards: [
+    { type: "custom:tile-card-pro", entity: "light.living_room" },
+    { type: "custom:tile-card-pro", entity: "light.kitchen" },
+    {
+      type: "custom:tile-card-pro",
+      entity: "climate.living_room",
+      grid_options: { columns: 12 },
+    },
+  ],
+};
+const openPopup = async (page: import("@playwright/test").Page) => {
+  await page.evaluate(() => {
+    history.pushState(null, "", "#living-room");
+    window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
+  });
+  await page.locator(".pro-cards-popup .sheet tile-card-pro").first().waitFor();
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForTimeout(150);
+  return (await page.locator(".pro-cards-popup .sheet").boundingBox())!;
+};
+for (const theme of THEMES) {
+  test(`pu-edit (${theme})`, async ({ page }) => {
+    await mount(page, PU, { theme });
+    await page.evaluate(
+      () => ((window.pc.card(0) as unknown as { preview: boolean }).preview = true),
+    );
+    const c = page.locator("#root .cell").first().locator("> *");
+    await c.locator(".inline tile-card-pro").first().waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(150);
+    await expect(c).toHaveScreenshot(`pu-edit-${theme}.png`);
+  });
+  test(`pu-sheet (${theme})`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mount(page, PU, { theme, width: 358 });
+    const s = await openPopup(page);
+    // the sheet and a strip of the scrim above it
+    await expect(page).toHaveScreenshot(`pu-sheet-${theme}.png`, {
+      clip: { x: 0, y: s.y - 24, width: 390, height: 844 - s.y + 24 },
+    });
+  });
+  test(`pu-dialog (${theme})`, async ({ page }) => {
+    await mount(page, PU, { theme });
+    const s = await openPopup(page);
+    await expect(page).toHaveScreenshot(`pu-dialog-${theme}.png`, {
+      clip: { x: s.x - 24, y: s.y - 24, width: s.width + 48, height: s.height + 48 },
+    });
+  });
+}
+
 // cases rendered under a Home Assistant theme from ha.css instead of the default one
 const SKINS: Record<string, string> = { "fill-graphite": "graphite", "large-text": "large" };
 // one case under the Large text theme (ha-font-size-scale: 1.25): a list's lines and a trend's

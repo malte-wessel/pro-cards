@@ -57,3 +57,9 @@ export const lengths = (card: string) => {
 // the gap without one of the card's own: the theme's sections grid gap
 export const themeGap = (axis: "row" | "column"): string =>
   `var(--ha-section-grid-${axis}-gap, 8px)`;
+
+// one row of Home Assistant's sections grid: a card that asks for rows gets them in this unit
+export const ROW_HEIGHT = "var(--ha-section-grid-row-height, 56px)";
+// the height of `rows` rows and the gaps between them
+export const rowsHeight = (rows: number, rowGap: string) =>
+  `calc(${rows} * ${ROW_HEIGHT} + ${rows - 1} * ${rowGap})`;

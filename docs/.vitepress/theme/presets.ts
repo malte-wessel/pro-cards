@@ -29,6 +29,21 @@ cards:
   - type: custom:poster-card-pro
     entity: media_player.living_room_speaker
 `,
+  "Pop-up Card Pro": `type: custom:popup-card-pro
+hash: living-room
+title: Living room
+icon: mdi:sofa
+badges:
+  - sensor.living_room_temperature
+cards:
+  - type: custom:tile-card-pro
+    entity: light.living_room
+  - type: custom:tile-card-pro
+    entity: fan.living_room
+  - type: custom:tile-card-pro
+    entity: media_player.living_room_speaker
+    grid_options: { columns: 12 }
+`,
   "Tile with rules": `type: custom:tile-card-pro
 entity: sensor.living_room_temperature
 name: Living room

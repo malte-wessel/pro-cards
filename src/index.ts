@@ -12,6 +12,7 @@ import "./power-flow-card.ts";
 import "./energy-flow-card.ts";
 import "./layout-card.ts";
 import "./swipe-card.ts";
+import "./popup-card.ts";
 // deprecated (3.0), removed in 4.0: last in the card picker
 import "./entity-card.ts";
 import "./entity-group-card.ts";

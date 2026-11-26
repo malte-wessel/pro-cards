@@ -289,7 +289,7 @@ const ago = (t: number) => {
 // the examples, by card family
 const GROUPS: [string, RegExp][] = [
   ["Tiles & Poster", /(tile|poster)-card-pro/],
-  ["Layout", /(layout|swipe|heading)-card-pro/],
+  ["Layout", /(layout|swipe|popup|heading)-card-pro/],
   ["Schedules", /schedule-card-pro/],
   ["Energy", /(power|energy)-flow/],
   ["Weather", /(weather|wind|rain|sun|illuminance)/],
@@ -518,7 +518,7 @@ onBeforeUnmount(() => {
             role="tab"
             :aria-selected="view === 'visual'"
             :disabled="!editable.length"
-            :title="editable.length ? 'Edit with the card\'s own form' : 'The visual editor edits tiles, posters, tile groups, headings, layout, swipe, sun, multi trend, weather, schedule, power flow and energy flow cards'"
+            :title="editable.length ? 'Edit with the card\'s own form' : 'The visual editor edits tiles, posters, tile groups, headings, layout, swipe, pop-up, sun, multi trend, weather, schedule, power flow and energy flow cards'"
             @click="view = 'visual'"
           >
             Visual

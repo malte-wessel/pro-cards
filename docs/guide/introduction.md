@@ -76,6 +76,7 @@ A tile in a group takes the same keys as a tile card, and a poster nearly the sa
 | [Heading](/cards/heading-card)         | A title for a section, with live badges beside or below it.                        |
 | [Layout](/cards/layout-card)           | Arranges cards in a grid or masonry that changes with the width of the section.    |
 | [Swipe](/cards/swipe-card)             | Cards side by side in a strip you swipe through, with dots.                        |
+| [Pop-up](/cards/popup-card)            | Cards in a pop-up that a tap opens, a sheet you swipe away on a phone.             |
 | [Weather](/cards/weather-card)         | Current conditions and the hourly or daily forecast of a weather entity.           |
 | [Schedule](/cards/schedule-card)       | A schedule helper's week: when it runs, its blocks edited right on the card.       |
 | [Sun path](/cards/sun-path-card)       | Today's sun elevation with sunrise, sunset, dawn, noon and dusk.                   |

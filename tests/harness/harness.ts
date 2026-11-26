@@ -329,7 +329,7 @@ const setAdmin = (on: boolean) => {
 
 // the cards a mounted card shows: a layout or swipe card's own cards (each inside a hui-card), a
 // tile group with its tiles, else itself
-const CONTAINERS = ["layout-card-pro", "swipe-card-pro"];
+const CONTAINERS = ["layout-card-pro", "swipe-card-pro", "popup-card-pro"];
 const leaves = (el: Element): Element[] =>
   CONTAINERS.includes(el.localName)
     ? [...(el.shadowRoot?.querySelectorAll("hui-card") ?? [])].flatMap((h) =>
