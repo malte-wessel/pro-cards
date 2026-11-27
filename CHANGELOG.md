@@ -1,31 +1,32 @@
 # Changelog
 
-## 3.3.0 – Schedules
+## 3.3.0 – Schedules and pop-ups
 
 _Beta_
 
 ### What's new
 
-- **New pop-up card** (`custom:popup-card-pro`): cards in a pop-up that a tap opens, any card's navigate action to its hash (`navigation_path: "#kitchen"`). On a phone it is a sheet from the bottom you drag up to the full height and down to close (`height: full` opens it at the full height), on a wide screen a dialog; the back button closes it, and while closed it takes no room on the dashboard. A heading of its title, icon and badges on top, its cards in the section grid. [Pop-up](https://malte-wessel.github.io/pro-cards/cards/popup-card)
-- **New schedule card** (`custom:schedule-card-pro`): a schedule helper's week, with when it changes next and each block's data. [Schedule](https://malte-wessel.github.io/pro-cards/cards/schedule-card)
-- **Edit a schedule on the card** with a mouse, a finger or the keyboard: select, move, copy, resize and draw blocks across days; Done saves the week in one go. [Editing](https://malte-wessel.github.io/pro-cards/cards/schedule-card#editing-on-the-card)
-- **Schedules on tiles and posters:** the new `schedule` kind shows when it changes next and the day's blocks. [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#schedule)
-- **`secondary: false`** leaves the line under a poster's value (a tile's: what follows the value) out, the kind's too; the visual editor has a switch for it.
-- **A ring of another entity:** `icon: { ring: sensor.valve }` draws another entity's value around the icon, on its own scale, on posters, tiles and badges; `{ entity, attribute, min, max, color }` for its options. [Look](https://malte-wessel.github.io/pro-cards/cards/look#the-places)
-- **Plots on one scale:** `min` and `max` on a sparkline or columns visual set its scale, so cards side by side can be compared (`visual: { type: columns, max: 100 }`). Values beyond them widen the scale, nothing is cut off; with either, a column is as bright as it is tall. [Look](https://malte-wessel.github.io/pro-cards/cards/look#plots-on-one-scale)
+- **New pop-up card** (`custom:popup-card-pro`): cards in a pop-up that any card's navigate action to its hash opens (`navigation_path: "#kitchen"`). On a phone a sheet you drag up to the full height and down to close, on a wide screen a dialog; the back button closes it. [Pop-up](https://malte-wessel.github.io/pro-cards/cards/popup-card)
+- **New schedule card** (`custom:schedule-card-pro`): a schedule helper's week, when it changes next and each block's data. [Schedule](https://malte-wessel.github.io/pro-cards/cards/schedule-card)
+- **Edit a schedule on the card** with a mouse, a finger or the keyboard: select, move, copy, resize and draw blocks; Done saves the week. [Editing](https://malte-wessel.github.io/pro-cards/cards/schedule-card#editing-on-the-card)
+- **Schedules on tiles and posters:** the `schedule` kind shows when it changes next and the day's blocks. [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#schedule)
+- **A ring of another entity:** `icon: { ring: sensor.valve }` draws another entity's value around the icon, on posters, tiles and badges. [Look](https://malte-wessel.github.io/pro-cards/cards/look#the-places)
+- **Plots on one scale:** `min` and `max` on a sparkline or columns visual, so cards side by side can be compared (`visual: { type: columns, max: 100 }`). [Look](https://malte-wessel.github.io/pro-cards/cards/look#plots-on-one-scale)
+- **`secondary: false`** leaves the line under a poster's or tile's value out, the kind's too.
 
 ### Changed: existing cards look different
 
-- **Schedules:** a schedule tile or poster showed On or Off; it now shows when it changes next and today's blocks (a tile is two rows high). `visual: false` leaves the blocks out.
-- **Plots of the card's own entity** take the `min` and `max` written on the card, as its bar, gauge and ring do; they fitted their data alone. A card that writes them (for a bar, a ring or a slider) now draws its plot on that scale: columns as bright as they are tall, growing from a `min` above 0.
-- **A soft badge's name** is in the badge's colour, as its value is; it was grey on the coloured tint.
-- **A plot's axis** (`axis: true`) is a row above the drawing: the scale's range on the left, the window (`24 h`) on the right. Its labels lay over the columns or the line, with the window's start above now; the plot keeps its height, the drawing is the row shorter.
+- **Schedule tiles and posters** show when they change next and today's blocks instead of On or Off (a tile is two rows high); `visual: false` leaves the blocks out.
+- **Plots of the card's own entity** use the `min` and `max` written on the card, as its bar, gauge and ring do: columns are as bright as they are tall.
+- **A plot's axis** (`axis: true`) is a row above the drawing: the scale's range on the left, the window (`24 h`) on the right.
+- **A soft badge's name** is in the badge's colour, as its value is.
+- **Container editors** (layout, swipe, tile group) number their cards' tabs, as Home Assistant's stack editor does, with the card's name as the tooltip.
 
 ### Fixes
 
-- A tap on a tile or a poster on a phone that opens a pop-up no longer closes it again at once or presses one of its cards: the browser's click after the tap, which landed on the pop-up opened under the finger, is not sent, as on Home Assistant's own cards.
-- A plot of another entity (`src`) writes that entity's unit and precision in its tooltip and axis, also on a card whose value is an attribute (a thermostat's temperature): it showed "16" for "16.0 %". Its tooltip no longer names the card's rules, which are written for the card's own value.
-- A poster's and a tile's columns stand on the card's bottom edge on square feet: the card cut off their lowest 4 px, so a small value (under 7 % of the plot) showed no column at all.
+- A container editor's tabs past the first few could not be reached with a mouse; where they are still wider than the editor, chevrons scroll them now.
+- A plot of another entity (`src`) writes that entity's unit and precision in its tooltip and axis ("16.0 %", not "16").
+- A poster's and a tile's columns stand on the card's edge: the lowest 4 px were cut off, so a small value showed no column.
 
 ## 3.2.0 – Timers that count down, names by their parts
 

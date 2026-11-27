@@ -432,12 +432,20 @@ test("the layout's editor adds a card from the picker and arranges its cards", a
   await e.editor.getByRole("tab", { name: "Add a card" }).click();
   await e.editor.locator("hui-card-picker button", { hasText: "Poster Card Pro" }).click();
   await expect.poll(async () => ((await e.last())?.cards as Raw[])?.length).toBe(2);
-  await expect(e.editor.locator(".tab")).toHaveText(["1Tile Pro", "2Poster Pro"]);
-  await expect(e.editor.locator(".tab").nth(1)).toHaveAttribute("aria-selected", "true");
+  await expect(e.editor.locator(".tab")).toHaveText(["1", "2"]);
+  await expect(e.editor.getByRole("tab", { name: "2 Poster Pro" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
   // the new card's own editor is open
   await expect(e.editor.locator("hui-card-element-editor poster-card-pro-editor")).toHaveCount(1);
   await e.editor.getByRole("button", { name: "Move left" }).click();
-  await expect(e.editor.locator(".tab")).toHaveText(["1Poster Pro", "2Tile Pro"]);
+  await expect
+    .poll(() =>
+      e.editor.locator(".tab").evaluateAll((ts) => ts.map((t) => t.getAttribute("aria-label"))),
+    )
+    .toEqual(["1 Poster Pro", "2 Tile Pro"]);
+  await expect(e.editor.locator(".tab").first()).toHaveAttribute("title", "Poster Pro");
   await e.editor.getByRole("button", { name: "Delete" }).click();
   await expect.poll(e.last).toEqual({ type: "custom:layout-card-pro", cards: [tile] });
 });
@@ -480,7 +488,9 @@ test("the tile group's editor edits a tile in the tile's own editor", async ({ p
     title: "Lights",
     tiles: ["light.kitchen", "light.living_room"],
   });
-  await expect(e.editor.locator(".tab")).toHaveText(["1Kitchen", "2Living room"]);
+  await expect(e.editor.locator(".tab")).toHaveText(["1", "2"]);
+  await expect(e.editor.locator(".tab").first()).toHaveAttribute("title", "Kitchen");
+  await expect(e.editor.getByRole("tab", { name: "2 Living room" })).toHaveCount(1);
   const tile = e.editor.locator("hui-card-element-editor tile-card-pro-editor ha-form").first();
   await fill(tile, "name", "Worktop");
   await expect.poll(e.last).toEqual({
@@ -488,7 +498,7 @@ test("the tile group's editor edits a tile in the tile's own editor", async ({ p
     title: "Lights",
     tiles: [{ entity: "light.kitchen", name: "Worktop" }, "light.living_room"],
   });
-  await expect(e.editor.locator(".tab").first()).toHaveText("1Worktop");
+  await expect(e.editor.locator(".tab").first()).toHaveAttribute("title", "Worktop");
 });
 
 test("the heading's style, layout and badges are set in its form", async ({ page }) => {
@@ -754,4 +764,58 @@ test("the tile's editor offers a timer's presets only where it has some", async 
   await expect(field(chosen.form, "control_attribute")).toContainText(
     "add them in its settings in Home Assistant",
   );
+});
+
+test("a container's tabs are numbered; more than its editor's width scroll by the chevrons", async ({
+  page,
+}) => {
+  const tiles = (n: number) => Array.from({ length: n }, () => "light.kitchen");
+  const e = await openEditor(page, { type: "custom:tile-group-card-pro", tiles: tiles(7) });
+  await e.editor.evaluate((el) => (el.style.cssText = "display: block; width: 440px"));
+  const tabs = e.editor.locator(".tabs");
+  const [back, forward] = [e.editor.locator(".chev.back"), e.editor.locator(".chev.forward")];
+  // seven tiles fit, as in Home Assistant's stack editor: no chevrons
+  await expect(e.editor.locator(".tab")).toHaveCount(7);
+  await expect(back).toBeHidden();
+  await expect(forward).toBeHidden();
+  // sixteen do not: a chevron at each end, as Home Assistant's, the one at the end the tabs are
+  // scrolled to not drawn (its room kept, so the tabs never move for it)
+  await e.editor.evaluate(
+    (el, cfg) => (el as HTMLElement & { setConfig(c: unknown): void }).setConfig(cfg),
+    { type: "custom:tile-group-card-pro", tiles: tiles(16) },
+  );
+  await expect(e.editor.locator(".tab")).toHaveCount(16);
+  await expect(forward).toBeVisible();
+  await expect(back).toBeHidden();
+  const at = () => tabs.evaluate((t) => t.scrollLeft);
+  const left = () => tabs.evaluate((t) => Math.round(t.getBoundingClientRect().left));
+  const start = await left();
+  await forward.click();
+  await expect.poll(at).toBeGreaterThan(0);
+  await expect(back).toBeVisible();
+  // (a chevron takes no focus: it is hidden from the tabs' keyboard)
+  expect(
+    await e.editor.evaluate((el) => !!el.shadowRoot!.activeElement?.classList.contains("chev")),
+  ).toBe(false);
+  expect(await left()).toBe(start);
+  await tabs.evaluate((t) => (t.scrollLeft = t.scrollWidth));
+  await expect(forward).toBeHidden();
+  await back.click();
+  await expect(forward).toBeVisible();
+  await tabs.evaluate((t) => (t.scrollLeft = 0));
+  await expect(back).toBeHidden();
+  // a selection that moves past the bar's edge by a tool (Move right, not the keyboard, which
+  // focuses the tab) brings its tab into view
+  const shown = () =>
+    e.editor.locator(".tab[aria-selected=true]").evaluate((t) => {
+      const [r, bar] = [t.getBoundingClientRect(), t.parentElement!.getBoundingClientRect()];
+      return r.left >= bar.left - 1 && r.right <= bar.right + 1;
+    });
+  await e.editor.locator(".tab").nth(4).click();
+  for (let i = 5; i <= 12; i++) {
+    await e.editor.getByRole("button", { name: "Move right" }).click();
+    await expect(e.editor.locator(".tab").nth(i)).toHaveAttribute("aria-selected", "true");
+    expect(await shown()).toBe(true);
+  }
+  expect(await at()).toBeGreaterThan(0);
 });

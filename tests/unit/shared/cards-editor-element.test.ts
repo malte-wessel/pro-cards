@@ -57,7 +57,7 @@ const editor = async (type: string, config: Record<string, unknown>, hass = snap
     sent,
     last: () => sent.at(-1)!,
     cards: () => sent.at(-1)!.cards as CardConfigBase[],
-    tabs: () => [...root.querySelectorAll(".tab")].map((t) => t.textContent),
+    tabs: () => [...root.querySelectorAll(".tab")].map((t) => t.getAttribute("aria-label")),
     selected: () =>
       [...root.querySelectorAll(".tab, .icon.add")].findIndex(
         (t) => t.getAttribute("aria-selected") === "true",
@@ -78,7 +78,7 @@ const editor = async (type: string, config: Record<string, unknown>, hass = snap
 describe("the container editors' tabs", () => {
   it("name each card and select one", async () => {
     const e = await editor(LAYOUT, { cards: [tile, poster, entities] });
-    expect(e.tabs()).toEqual(["1Tile Pro", "2Poster Pro", "3Entities"]);
+    expect(e.tabs()).toEqual(["1 Tile Pro", "2 Poster Pro", "3 Entities"]);
     expect(e.selected()).toBe(0);
     expect(e.child().localName).toBe("hui-card-element-editor");
     expect(e.child().value).toEqual(tile);
@@ -171,7 +171,7 @@ describe("the container editors' tools", () => {
     await tick();
     expect(e.cards()).toHaveLength(2);
     expect(e.cards()[1].type).toBe("custom:tile-card-pro");
-    expect(e.tabs()).toEqual(["1Tile Pro", "2Tile Pro"]);
+    expect(e.tabs()).toEqual(["1 Tile Pro", "2 Tile Pro"]);
     expect(e.selected()).toBe(1);
     expect(e.child().localName).toBe("hui-card-element-editor");
   });
@@ -358,7 +358,7 @@ describe("the container editors from outside", () => {
     await e.tab(2);
     e.ed.setConfig({ type: LAYOUT, cards: [tile] } as CardConfigBase);
     await tick();
-    expect(e.tabs()).toEqual(["1Tile Pro"]);
+    expect(e.tabs()).toEqual(["1 Tile Pro"]);
     expect(e.selected()).toBe(0);
   });
 
@@ -429,7 +429,7 @@ describe("the tile group's editor", () => {
       tiles: ["light.kitchen", { entity: "light.living_room", name: "Sofa" }],
     });
     // the tabs by name: the tile's own, else its entity's
-    expect(e.tabs()).toEqual(["1Kitchen", "2Sofa"]);
+    expect(e.tabs()).toEqual(["1 Kitchen", "2 Sofa"]);
     expect((e.child() as unknown as { value: { type: string } }).value).toEqual({
       type: "custom:tile-card-pro",
       entity: "light.kitchen",

@@ -73,13 +73,13 @@ describe("the container cards' editor", () => {
     const sent: CardConfigBase[] = [];
     ed.addEventListener("config-changed", (e) => sent.push((e as CustomEvent).detail.config));
     const root = ed.shadowRoot!;
-    const tabs = () => [...root.querySelectorAll(".tab")].map((t) => t.textContent);
+    const tabs = () => [...root.querySelectorAll(".tab")].map((t) => t.getAttribute("aria-label"));
     const press = async (label: string) => {
       root.querySelector<HTMLButtonElement>(`button[title="${label}"]`)!.click();
       await tick();
     };
     const cards = () => sent.at(-1)!.cards as CardConfigBase[];
-    expect(tabs()).toEqual(["1Tile Pro", "2Poster Pro"]);
+    expect(tabs()).toEqual(["1 Tile Pro", "2 Poster Pro"]);
     // the selected card's own editor
     expect(root.querySelector(".child hui-card-element-editor")).not.toBeNull();
 
