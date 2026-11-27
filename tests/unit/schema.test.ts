@@ -547,7 +547,7 @@ describe("card config schemas", () => {
     ).toBeTruthy();
   });
 
-  it("checks a ring of another entity and a poster's second value", () => {
+  it("checks a ring of another entity and the line under the value", () => {
     const H = "sensor.living_room_humidity",
       B = "sensor.battery_soc";
     for (const type of ["custom:poster-card-pro", "custom:tile-card-pro"]) {

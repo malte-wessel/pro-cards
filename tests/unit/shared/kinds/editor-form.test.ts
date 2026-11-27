@@ -1223,7 +1223,7 @@ describe("the editor form: your own buttons", () => {
   });
 });
 
-describe("the editor form: a ring of another entity and a second value", () => {
+describe("the editor form: a ring of another entity", () => {
   const TEMP = { type: "custom:poster-card-pro", entity: "sensor.living_room_temperature" };
   const RING = { entity: "sensor.battery_soc", max: 80, color: "orange" };
 

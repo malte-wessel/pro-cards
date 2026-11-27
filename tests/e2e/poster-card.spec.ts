@@ -680,8 +680,7 @@ test.describe("poster types", () => {
     // the name is not cut by the controls: it runs over them
     const name = await rect(robot.locator(".pbody > .pname"));
     expect(name.right).toBeGreaterThan(end.left);
-    // under: segments too wide to sit beside go under the value and what is under it (a
-    // thermostat's target, its second value)
+    // under: segments too wide to sit beside go under the value and the line under it
     const bed = card(page, 1);
     const line = await rect(bed.locator(".ptext"));
     const segs = await rect(bed.locator(".pmain > .end"));
@@ -1326,7 +1325,7 @@ test.describe("poster pointer", () => {
   });
 });
 
-test.describe("a poster's second value and a ring of another entity", () => {
+test.describe("a thermostat's line, a ring of another entity and secondary: false", () => {
   const TEMP = "sensor.living_room_temperature";
   // how far a ring is filled: 1 - its dash offset over its circumference
   const filled = (ring: Locator) =>

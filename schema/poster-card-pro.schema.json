@@ -337,31 +337,19 @@
       "type": "array",
       "items": {
         "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "number"
-          },
+          { "type": "string" },
+          { "type": "number" },
           {
             "type": "object",
             "properties": {
-              "value": {
-                "type": ["string", "number"]
-              },
-              "label": {
-                "type": "string"
-              },
-              "icon": {
-                "$ref": "defs.schema.json#/$defs/icon"
-              }
+              "value": { "type": ["string", "number"] },
+              "label": { "type": "string" },
+              "icon": { "$ref": "defs.schema.json#/$defs/icon" }
             },
             "required": ["value"],
             "additionalProperties": false
           },
-          {
-            "$ref": "#/$defs/kindButton"
-          }
+          { "$ref": "#/$defs/kindButton" }
         ]
       },
       "description": "Options of segments and select (default: the entity's modes or options, a cover's or light's favourites); with type: buttons, the domain's own buttons by name ([stop, locate]) or your own: { entity, name, icon, color, rules, tap_action, … }"
@@ -425,9 +413,7 @@
         },
         "rules": {
           "type": "array",
-          "items": {
-            "$ref": "#/$defs/buttonRule"
-          },
+          "items": { "$ref": "#/$defs/buttonRule" },
           "description": "First matching rule wins: its icon, colour, text (value), pulse and fill (active)"
         },
         "tap_action": {
@@ -439,37 +425,17 @@
           "deprecated": true,
           "description": "Deprecated, goes in 4.0: use tap_action"
         },
-        "visibility": {
-          "$ref": "defs.schema.json#/$defs/visibility"
-        }
+        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" }
       },
       "anyOf": [
-        {
-          "required": ["entity"]
-        },
-        {
-          "required": ["tap_action"]
-        },
-        {
-          "required": ["action"]
-        }
+        { "required": ["entity"] },
+        { "required": ["tap_action"] },
+        { "required": ["action"] }
       ],
       "allOf": [
-        {
-          "not": {
-            "required": ["label", "name"]
-          }
-        },
-        {
-          "not": {
-            "required": ["label", "show_name"]
-          }
-        },
-        {
-          "not": {
-            "required": ["action", "tap_action"]
-          }
-        }
+        { "not": { "required": ["label", "name"] } },
+        { "not": { "required": ["label", "show_name"] } },
+        { "not": { "required": ["action", "tap_action"] } }
       ],
       "additionalProperties": false
     },
@@ -507,17 +473,7 @@
           "$ref": "entity.schema.json#/$defs/rule/properties/pulse"
         }
       },
-      "anyOf": [
-        {
-          "required": ["state"]
-        },
-        {
-          "required": ["below"]
-        },
-        {
-          "required": ["above"]
-        }
-      ],
+      "anyOf": [{ "required": ["state"] }, { "required": ["below"] }, { "required": ["above"] }],
       "additionalProperties": false
     },
     "format": {
@@ -1407,10 +1363,7 @@
       "description": "schedule: the block data shown (the secondary line, the tooltip), each a key of the blocks' data or { key, unit, step, min, max, default }",
       "items": {
         "oneOf": [
-          {
-            "type": "string",
-            "minLength": 1
-          },
+          { "type": "string", "minLength": 1 },
           {
             "type": "object",
             "properties": {
@@ -1419,27 +1372,15 @@
                 "minLength": 1,
                 "description": "The key in the blocks' data (temperature)"
               },
-              "unit": {
-                "type": "string",
-                "description": "The unit written after the value"
-              },
+              "unit": { "type": "string", "description": "The unit written after the value" },
               "step": {
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "description": "The step the schedule card's toolbar changes it by (default 1)"
               },
-              "min": {
-                "type": "number",
-                "description": "The least the toolbar sets"
-              },
-              "max": {
-                "type": "number",
-                "description": "The most the toolbar sets"
-              },
-              "default": {
-                "type": "number",
-                "description": "A new block's value"
-              }
+              "min": { "type": "number", "description": "The least the toolbar sets" },
+              "max": { "type": "number", "description": "The most the toolbar sets" },
+              "default": { "type": "number", "description": "A new block's value" }
             },
             "required": ["key"],
             "additionalProperties": false
