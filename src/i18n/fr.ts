@@ -104,10 +104,6 @@ const fr: Translation = {
   "popup.open": "Ouvrir",
   "popup.close": "Fermer",
   "popup.name": "Fenêtre contextuelle",
-  "popup.section_missing": "Aucune section « {section} » dans ce tableau de bord et cette vue",
-  "popup.section_generated":
-    "Ce tableau de bord est généré par une stratégie : il n'a pas de sections à montrer",
-  "popup.section_unreadable": "Ce tableau de bord n'a pas pu être lu",
   "group.stub_title": "Groupe",
   "sections.stub_title": "Section",
   "heading.stub_title": "Titre",
@@ -1017,16 +1013,6 @@ const fr: Translation = {
   "editor.cards.width.full": "Pleine largeur",
   "editor.cards.popup_height.auto": "Aussi haute que ses cartes",
   "editor.cards.popup_height.full": "Pleine hauteur",
-  "editor.cards.section_source": "Section d'un tableau de bord",
-  "editor.cards.field.section_dashboard": "Tableau de bord",
-  "editor.cards.field.section_view": "Vue",
-  "editor.cards.field.section_title": "Section",
-  "editor.cards.help.section_dashboard":
-    "Son adresse, p. ex. dashboard-pieces. Vide : ce tableau de bord",
-  "editor.cards.help.section_view":
-    "Son chemin ou son numéro, à partir de 0. Vide : cette vue, sinon la première",
-  "editor.cards.help.section_title":
-    "Le titre de la section. Ses cartes précèdent celles de la fenêtre",
   "editor.cards.help.hash":
     "Une action de navigation vers #cuisine ouvre la fenêtre au hash cuisine",
   "editor.cards.help.width": "Sur un écran large ; un téléphone affiche un panneau depuis le bas",

@@ -41,15 +41,6 @@ import {
   type Pose,
 } from "./popup/gesture.ts";
 import { cellOf, GRID_COLUMNS, spanOf } from "./popup/place.ts";
-import {
-  dashboardConfig,
-  DEFAULT_DASHBOARD,
-  findSection,
-  isHeading,
-  onDashboardSaved,
-  pageDashboard,
-  type Found,
-} from "./popup/section.ts";
 import { PORTAL_STYLE, STYLE } from "./popup/styles.ts";
 
 // below this width the pop-up is a sheet from the bottom, else a dialog in the middle
@@ -129,13 +120,6 @@ export class PopupCard extends CardsBase {
   _geo?: { nat: number; max: number; e0: number };
   _focusBack: HTMLElement | null = null;
   _locked = false; // this pop-up holds the page's scroll lock
-  // its section's cards, and why there are none (it was not found, its dashboard not read)
-  _sectionCards: CardConfigBase[] = [];
-  _sectionError: Extract<Found, { error: string }>["error"] | null = null;
-  _sectionFor = ""; // what the cards were asked for: the section, its dashboard and view
-  _sectionAsk = 0;
-  _sectionDash = "";
-  _offSaved?: () => void;
   // the templates of its own `visibility`, which decides whether it opens
   _tpl = new TemplateSubscriptions(CARD_TYPE, () => {});
   _media?: MediaQueryList;
@@ -152,7 +136,6 @@ export class PopupCard extends CardsBase {
     this._cfg = normalizePopupConfig(config);
     if (this._state !== "closed") this._applyWidth();
     this._syncTemplates();
-    this._loadSection();
     this._load();
   }
 
@@ -160,7 +143,6 @@ export class PopupCard extends CardsBase {
     super.hass = hass;
     if (this._head) this._head.hass = hass;
     this._syncTemplates();
-    this._loadSection();
   }
   get hass(): HomeAssistant | undefined {
     return super.hass;
@@ -181,10 +163,6 @@ export class PopupCard extends CardsBase {
     window.addEventListener("popstate", this._onLocation);
     window.addEventListener("hashchange", this._onLocation);
     this._syncTemplates();
-    this._offSaved = onDashboardSaved((dashboard) => {
-      if (dashboard === this._sectionDash) this._loadSection(true);
-    });
-    this._loadSection();
     // (in Home Assistant's card editor or not: Open shows there or not)
     this._place();
     // opened by the address the page was loaded with (a link to the pop-up): nothing to go back to
@@ -200,80 +178,12 @@ export class PopupCard extends CardsBase {
     window.removeEventListener("popstate", this._onLocation);
     window.removeEventListener("hashchange", this._onLocation);
     this._tpl.clear();
-    this._offSaved?.();
-    // a dashboard saved while it was away is asked for again when it is back (cached else)
-    this._sectionFor = "";
     // another view: the pop-up goes with the card, at once
     if (this._state !== "closed") this._teardown(false);
   }
 
-  // the section's cards first, then its own
   _childConfigs() {
-    const cfg = this._cfg;
-    if (!cfg) return undefined;
-    if (!cfg.section) return cfg.cards;
-    const cards = this._sectionLead() ? this._sectionCards.slice(1) : this._sectionCards;
-    return [...cards, ...cfg.cards];
-  }
-  // the section's heading, the header of a pop-up without one of its own (it would be a line
-  // under the close button else)
-  _sectionLead(): CardConfigBase | null {
-    const first = this._sectionCards[0];
-    return this._cfg?.section && !this._cfg.header && isHeading(first) ? first : null;
-  }
-
-  // The section's cards, asked for when the card gets its config, its hass or its place (the
-  // page's dashboard and view, where the section names none) and when its dashboard is saved
-  _loadSection(again = false) {
-    const ref = this._cfg?.section;
-    const hass = this._hass;
-    if (!ref) {
-      this._sectionFor = "";
-      this._sectionAsk++; // an answer on its way is for nothing now
-      if (this._sectionCards.length || this._sectionError) this._setSection([], null);
-      return;
-    }
-    if (!hass?.callWS) return;
-    const page = pageDashboard(location.pathname);
-    const dashboard = ref.dashboard ?? page.dashboard;
-    // the page's view, where the section is on the dashboard the page shows
-    const here = dashboard === page.dashboard ? page.view : null;
-    const key = JSON.stringify([ref, dashboard, here]);
-    if (!again && key === this._sectionFor) return;
-    this._sectionFor = key;
-    this._sectionDash = dashboard;
-    const ask = ++this._sectionAsk;
-    dashboardConfig(hass, dashboard).then(
-      (config) => {
-        if (ask !== this._sectionAsk) return;
-        // no config: no such dashboard, or the default one generated
-        const found: Found =
-          config === null
-            ? { error: dashboard === DEFAULT_DASHBOARD ? "generated" : "unreadable" }
-            : findSection(config, ref, here);
-        if ("error" in found) this._setSection([], found.error);
-        else this._setSection(found.cards, null);
-      },
-      () => {
-        if (ask !== this._sectionAsk) return;
-        // the connection lost: asked again with the next hass
-        this._sectionFor = "";
-        this._setSection([], "unreadable");
-      },
-    );
-  }
-  _setSection(cards: CardConfigBase[], error: PopupCard["_sectionError"]) {
-    this._sectionCards = cards;
-    this._sectionError = error;
-    // (before hui-card is there, _load takes them when it is)
-    if (this._ready) this._sync();
-  }
-  _message() {
-    const ref = this._cfg?.section;
-    if (!ref || !this._sectionError) return null;
-    return t(this._hass, `popup.section_${this._sectionError}`, {
-      section: ref.title ?? `#${ref.index}`,
-    });
+    return this._cfg?.cards;
   }
   _style() {
     return STYLE;
@@ -421,8 +331,7 @@ export class PopupCard extends CardsBase {
   }
   // the dialog's name: its title as written, else (none, or a template) the word for a pop-up
   _name() {
-    const head = this._cfg?.header ?? this._sectionLead();
-    const title = head?.type === "heading" ? head.heading : head?.title;
+    const title = this._cfg?.header?.title;
     this._sheet?.setAttribute(
       "aria-label",
       typeof title === "string" && title && !TEMPLATE.test(title)
@@ -434,7 +343,7 @@ export class PopupCard extends CardsBase {
   // the cards, and the header's heading card beside them
   _sync() {
     super._sync();
-    const head = this._cfg?.header ?? this._sectionLead();
+    const head = this._cfg?.header ?? null;
     const key = head ? childKey(head) : "";
     if (key !== this._headKey) {
       this._headKey = key;

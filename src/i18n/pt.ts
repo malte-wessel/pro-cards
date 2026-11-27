@@ -104,10 +104,6 @@ const pt: Translation = {
   "popup.open": "Abrir",
   "popup.close": "Fechar",
   "popup.name": "Janela pop-up",
-  "popup.section_missing": "Nenhuma secção «{section}» nesse painel e vista",
-  "popup.section_generated":
-    "Esse painel é gerado por uma estratégia: não tem secções para mostrar",
-  "popup.section_unreadable": "Não foi possível ler esse painel",
   "group.stub_title": "Grupo",
   "sections.stub_title": "Secção",
   "heading.stub_title": "Cabeçalho",
@@ -1013,15 +1009,6 @@ const pt: Translation = {
   "editor.cards.width.full": "Largura total",
   "editor.cards.popup_height.auto": "Tão alta como os cartões",
   "editor.cards.popup_height.full": "Altura total",
-  "editor.cards.section_source": "Secção de um painel",
-  "editor.cards.field.section_dashboard": "Painel",
-  "editor.cards.field.section_view": "Vista",
-  "editor.cards.field.section_title": "Secção",
-  "editor.cards.help.section_dashboard":
-    "O seu endereço, p. ex. dashboard-divisoes. Vazio: este painel",
-  "editor.cards.help.section_view":
-    "O seu caminho ou número, a partir de 0. Vazio: esta vista, senão a primeira",
-  "editor.cards.help.section_title": "O título da secção. Os seus cartões vêm antes dos da janela",
   "editor.cards.help.hash": "Uma ação de navegar para #cozinha abre a janela com o hash cozinha",
   "editor.cards.help.width": "Num ecrã largo; um telemóvel mostra um painel a partir de baixo",
   "editor.cards.help.unfold":

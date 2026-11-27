@@ -104,10 +104,6 @@ const it: Translation = {
   "popup.open": "Apri",
   "popup.close": "Chiudi",
   "popup.name": "Pop-up",
-  "popup.section_missing": "Nessuna sezione «{section}» in quella dashboard e vista",
-  "popup.section_generated":
-    "Quella dashboard è generata da una strategia: non ha sezioni da mostrare",
-  "popup.section_unreadable": "Impossibile leggere quella dashboard",
   "group.stub_title": "Gruppo",
   "sections.stub_title": "Sezione",
   "heading.stub_title": "Intestazione",
@@ -1016,16 +1012,6 @@ const it: Translation = {
   "editor.cards.width.full": "Larghezza piena",
   "editor.cards.popup_height.auto": "Alta quanto le sue schede",
   "editor.cards.popup_height.full": "Altezza piena",
-  "editor.cards.section_source": "Sezione di una dashboard",
-  "editor.cards.field.section_dashboard": "Dashboard",
-  "editor.cards.field.section_view": "Vista",
-  "editor.cards.field.section_title": "Sezione",
-  "editor.cards.help.section_dashboard":
-    "Il suo indirizzo, es. dashboard-stanze. Vuoto: questa dashboard",
-  "editor.cards.help.section_view":
-    "Il suo percorso o numero, da 0. Vuoto: questa vista, altrimenti la prima",
-  "editor.cards.help.section_title":
-    "L'intestazione della sezione. Le sue schede vengono prima di quelle del pop-up",
   "editor.cards.help.hash":
     "Un'azione di navigazione verso #cucina apre il pop-up con l'hash cucina",
   "editor.cards.help.width": "Su uno schermo largo; un telefono mostra un pannello dal basso",

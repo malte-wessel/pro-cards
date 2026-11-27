@@ -104,10 +104,6 @@ const de: Translation = {
   "popup.open": "Öffnen",
   "popup.close": "Schließen",
   "popup.name": "Pop-up",
-  "popup.section_missing": "Kein Abschnitt „{section}“ in diesem Dashboard und dieser Ansicht",
-  "popup.section_generated":
-    "Dieses Dashboard wird von einer Strategie erzeugt: Es hat keine Abschnitte zum Zeigen",
-  "popup.section_unreadable": "Dieses Dashboard konnte nicht gelesen werden",
   "group.stub_title": "Gruppe",
   "sections.stub_title": "Abschnitt",
   "heading.stub_title": "Überschrift",
@@ -1014,16 +1010,6 @@ const de: Translation = {
   "editor.cards.width.full": "Volle Breite",
   "editor.cards.popup_height.auto": "So hoch wie seine Karten",
   "editor.cards.popup_height.full": "Volle Höhe",
-  "editor.cards.section_source": "Abschnitt eines Dashboards",
-  "editor.cards.field.section_dashboard": "Dashboard",
-  "editor.cards.field.section_view": "Ansicht",
-  "editor.cards.field.section_title": "Abschnitt",
-  "editor.cards.help.section_dashboard":
-    "Seine Adresse, z. B. dashboard-raeume. Leer: dieses Dashboard",
-  "editor.cards.help.section_view":
-    "Ihr Pfad oder ihre Nummer, ab 0. Leer: diese Ansicht, sonst die erste",
-  "editor.cards.help.section_title":
-    "Die Überschrift des Abschnitts. Seine Karten kommen vor den eigenen des Pop-ups",
   "editor.cards.help.hash":
     "Eine Navigieren-Aktion zu #kueche öffnet das Pop-up mit dem Hash kueche",
   "editor.cards.help.width": "Auf einem breiten Bildschirm; ein Handy zeigt ein Blatt von unten",

@@ -63,66 +63,14 @@ export const popupSchema = (hass: HomeAssistant | undefined): HaFormSchema[] => 
     iconPath: ICONS.badges,
     schema: [{ name: "badges", selector: { pro_cards_badges: { entity: "", hide_label: true } } }],
   },
-  {
-    name: "",
-    type: "expandable",
-    flatten: true,
-    title: L(hass, "section_source"),
-    iconPath: ICONS.layout,
-    schema: [
-      grid(
-        { name: "section_dashboard", selector: { text: {} } },
-        { name: "section_view", selector: { text: {} } },
-      ),
-      { name: "section_title", selector: { text: {} } },
-    ],
-  },
 ];
-
-type Raw = Record<string, unknown>;
-const SECTION_FIELDS = {
-  section_dashboard: "dashboard",
-  section_view: "view",
-  section_title: "title",
-};
-
-// `section: { dashboard, view, title }` as the form's three text fields, and back: a section left
-// as it was keeps its spelling (its index too, which only YAML writes), a view of digits is its
-// number, and no field filled leaves it out
-export const sectionToForm = (section: unknown): Record<string, string> => {
-  const s = (section && typeof section === "object" ? section : {}) as Raw;
-  return Object.fromEntries(
-    Object.entries(SECTION_FIELDS).map(([f, k]) => [
-      f,
-      s[k] === undefined || s[k] === null ? "" : String(s[k]),
-    ]),
-  );
-};
-export const sectionFromForm = (data: HaFormData, prev: unknown): unknown => {
-  const now = Object.fromEntries(
-    Object.keys(SECTION_FIELDS).map((f) => [f, String(data[f] ?? "").trim()]),
-  );
-  if (JSON.stringify(now) === JSON.stringify(sectionToForm(prev))) return prev;
-  const out: Raw = {};
-  for (const [f, k] of Object.entries(SECTION_FIELDS)) {
-    const v = now[f];
-    if (v) out[k] = k === "view" && /^\d+$/.test(v) ? Number(v) : v;
-  }
-  const was = (prev && typeof prev === "object" ? prev : {}) as Raw;
-  if (!out.title && was.index !== undefined) out.index = was.index;
-  return Object.keys(out).length ? out : undefined;
-};
 
 export class PopupCardEditor extends CardsEditorBase {
   _optionsSchema(hass: HomeAssistant | undefined) {
     return popupSchema(hass);
   }
   _optionsToForm(config: CardConfigBase) {
-    return {
-      ...optionsToForm(config, POPUP_CONVS, DEFAULTS),
-      badges: badgesToForm(config.badges),
-      ...sectionToForm(config.section),
-    };
+    return { ...optionsToForm(config, POPUP_CONVS, DEFAULTS), badges: badgesToForm(config.badges) };
   }
   _optionsFromForm(data: HaFormData, prev: CardConfigBase) {
     const next = optionsFromForm(data, prev, POPUP_CONVS, DEFAULTS) as Record<string, unknown>;
@@ -132,9 +80,6 @@ export class PopupCardEditor extends CardsEditorBase {
       if (badges.length) next.badges = badges;
       else delete next.badges;
     }
-    const section = sectionFromForm(data, prev.section);
-    if (section === undefined) delete next.section;
-    else next.section = section;
     return next as CardConfigBase;
   }
 }
