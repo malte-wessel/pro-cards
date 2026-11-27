@@ -651,19 +651,6 @@ export const configToForm = (
   // the line under the value: shown unless `secondary: false`
   d.show_secondary = c.secondary !== false;
   if (c.secondary === false) d.secondary = "";
-  // a poster's second value: whether it shows (`aside: false`: not even the kind's), its entity and
-  // its attribute (its other keys stay as written)
-  if (thing === "poster") {
-    d.show_aside = c.aside !== false;
-    d.aside =
-      typeof c.aside === "string"
-        ? c.aside
-        : isObj(c.aside) && typeof c.aside.entity === "string"
-          ? c.aside.entity
-          : "";
-    d.aside_attribute =
-      isObj(c.aside) && typeof c.aside.attribute === "string" ? c.aside.attribute : "";
-  }
   for (const k of ACTIONS) if (c[k] !== undefined) d[k] = actionToForm(c[k]);
 
   // the icon: its thing, its options, its own actions and (a tile's) badge
@@ -779,44 +766,6 @@ export const configToForm = (
   return withDefaults(d);
 };
 
-// a poster's second value from the form's entity: the object as written keeps its other keys (an
-// attribute without an entity reads the card's); cleared, it is left out
-const asideFromForm = (entity: unknown, attribute: unknown, written: unknown): unknown => {
-  const e = filled(entity) ? entity : undefined;
-  const rest: Raw = isObj(written) ? { ...written } : {};
-  delete rest.entity;
-  delete rest.attribute;
-  if (filled(attribute)) rest.attribute = attribute;
-  if (!e && rest.attribute === undefined && rest.value === undefined) return undefined;
-  // the shortest spelling: an entity alone is its id
-  if (!Object.keys(rest).length) return e;
-  return { ...(e ? { entity: e } : {}), ...rest };
-};
-// the entity a poster's second value names (null: none, it reads the card's)
-export const asideEntityOf = (config: CardConfigBase): string | null => {
-  const a = (config as Raw).aside;
-  if (typeof a === "string" && a) return a;
-  return isObj(a) && typeof a.entity === "string" && a.entity ? a.entity : null;
-};
-// a poster's second value fitted to the entities it reads now (another one picked for it, or for
-// the card while it reads the card's): an attribute its entity lacks goes, and with nothing left to
-// read the second value goes; `attrsOf` gives an entity's attributes (null: not known, kept)
-export const fitAside = (
-  config: CardConfigBase,
-  attrsOf: (entity: string) => readonly string[] | null,
-): CardConfigBase => {
-  const c: Raw = { ...config };
-  const a = c.aside;
-  if (!isObj(a) || typeof a.attribute !== "string") return config;
-  const entity = typeof a.entity === "string" && a.entity ? a.entity : c.entity;
-  const attrs = typeof entity === "string" && entity ? attrsOf(entity) : null;
-  if (!attrs || attrs.includes(a.attribute)) return config;
-  const rest: Raw = { ...a };
-  delete rest.attribute;
-  if (!rest.entity && rest.value === undefined) delete c.aside;
-  else c.aside = Object.keys(rest).length === 1 && rest.entity ? rest.entity : rest;
-  return c as CardConfigBase;
-};
 // the ring as the form has it: true, an entity id, or its options as written with the form's entity
 // (another entity's attribute, min and max go with it; its colour stays)
 const ringFromForm = (data: HaFormData, written: unknown): unknown => {
@@ -1083,12 +1032,6 @@ export const formToConfig = (
     if (JSON.stringify(data[k]) !== JSON.stringify(actionToForm(p[k])))
       setOrDrop(c, k, data[k], !isObj(data[k]));
   if (changed("icon_", ["icon"])) put("icon", iconFromForm(data, kind, thing, p.icon));
-  // a poster's second value: its entity from the form, its other keys as written
-  if (thing === "poster" && changed("aside"))
-    put("aside", asideFromForm(data.aside, data.aside_attribute, p.aside));
-  // turned off: none, not even the kind's; on again: the kind's, or the one written
-  if (thing === "poster" && data.show_aside === false) c.aside = false;
-  else if (thing === "poster" && c.aside === false) delete c.aside;
   if (changed("visual_")) put("visual", visualFromForm(data, kind, thing));
   if (changed("input_")) put("inputs", inputsFromForm(data, kind, isObj(p.inputs) ? p.inputs : {}));
   if (changed("series")) {

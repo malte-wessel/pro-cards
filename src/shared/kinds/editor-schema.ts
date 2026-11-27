@@ -1017,27 +1017,6 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
               ]
             : []),
         ]),
-    // a poster's second value beside its value (another entity's state; its other keys in YAML)
-    // a poster's second value: whether it shows, then what it reads (filled in: it stays)
-    ...(thing === "poster" && (writes("aside") || filledIn("aside_attribute"))
-      ? [
-          { name: "show_aside", selector: { boolean: {} } },
-          ...(data.show_aside !== false || filledIn("aside") || filledIn("aside_attribute")
-            ? [
-                { name: "aside", selector: { entity: {} } },
-                // what it reads of its entity, else of the card's (a thermostat's target)
-                {
-                  name: "aside_attribute",
-                  selector: {
-                    attribute: {
-                      entity_id: (filledIn("aside") ? data.aside : entity) as string,
-                    },
-                  },
-                },
-              ]
-            : []),
-        ]
-      : []),
     ...(format.length ? [heading("format_heading"), ...format] : []),
     ...(range.shown
       ? [

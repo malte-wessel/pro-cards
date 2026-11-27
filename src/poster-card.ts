@@ -19,8 +19,7 @@ import { defineElement, registerCard } from "./shared/card.ts";
 import { overflows } from "./shared/entity/base.ts";
 import type { EntityCardConfig, EntityItem } from "./shared/entity/config.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
-import { fillPosterSlots, tileValueText, type KindSlots } from "./shared/entity/render/fill.ts";
-import { formatValue } from "./shared/entity/value-format.ts";
+import { fillPosterSlots, tileValueText } from "./shared/entity/render/fill.ts";
 import { posterParts, secondaryEl } from "./shared/entity/render/lead.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { hideHover } from "./shared/hover.ts";
@@ -85,9 +84,6 @@ export class PosterCard extends KindCardBase {
     if (idx === 0 && row.classList.contains("poster")) {
       const kc = this._kindCtx(ctx);
       const slots = this._slots(kc);
-      // the card's own second value in place of the kind's
-      const aside = this._aside(ctx);
-      if (aside !== undefined) slots.aside = aside;
       // a kind's line under the value keeps its room while it has nothing to say (gusts gone, a
       // forecast still loading), so the name and the value never move
       if (slots.secondary === null) slots.secondary = secondaryEl([{ text: "\u00a0" }]);
@@ -122,30 +118,6 @@ export class PosterCard extends KindCardBase {
     }
     super._fill(ctx, row, ent, idx, m);
   }
-  // the second value the card writes (undefined: none written, the kind's stands): its value as its
-  // format writes it, a thermostat's temperature attributes in Home Assistant's unit; none while it
-  // has no value
-  _aside(ctx: RenderCtx): KindSlots["aside"] | undefined {
-    const cfg = this._config as PosterConfig;
-    if (cfg.asideIdx === null) return undefined;
-    const ent = cfg.entities[cfg.asideIdx],
-      m = this._modelAt(ctx, cfg.asideIdx);
-    // (an unavailable entity's attributes are what it had: none to show)
-    if (!m.model.avail || m.st?.state === "unavailable") return null;
-    let fmt = (ent.format !== "auto" && formatValue(ctx, ent, m)) || m.fmt;
-    if (!fmt.num) return null;
-    const src = ent.valueSrc;
-    if (
-      !fmt.unit &&
-      src.kind === "attribute" &&
-      /temp/.test(src.key) &&
-      /^(climate|water_heater)\./.test(ent.entity ?? "")
-    ) {
-      const unit = ctx.hass?.config?.unit_system?.temperature ?? "°C";
-      fmt = { ...fmt, unit, text: `${fmt.text} ${unit}` };
-    }
-    return { fmt, icon: ent.icon };
-  }
   // the status in the corner, unless it repeats the value (an Off light's "Off"); the poster's row
   // is filled before it, so the value is the one drawn now
   _status(kc: KindCtx) {
@@ -162,17 +134,7 @@ export class PosterCard extends KindCardBase {
     const kc = this._kindCtx(ctx);
     const kind = this._kindInputs(kc);
     if (idx === cfg.statusIdx) return [...inputs, kc.m, ...kind, this._status(kc)];
-    // (and the second value's model: a change of its entity fills the poster again)
-    return [
-      ...inputs,
-      ...kind,
-      imageUrl(ctx, this._iconLook(kc).iconImage),
-      cfg.asideIdx === null ? null : this._modelAt(ctx, cfg.asideIdx),
-      // (one written as the time from now: the minute too)
-      cfg.asideIdx !== null && cfg.entities[cfg.asideIdx].format === "relative"
-        ? Math.floor(ctx.now / 60e3)
-        : null,
-    ];
+    return [...inputs, ...kind, imageUrl(ctx, this._iconLook(kc).iconImage)];
   }
   // the kind's colour where neither the item (the poster, the status badge) nor its rule names one.
   // The poster's own colour is the body's --pc-tint, a registered colour, so a new one fades (the
@@ -236,9 +198,6 @@ export class PosterCard extends KindCardBase {
     base: number | null;
     drop: boolean;
     place: "beside" | "under" | null;
-    // the second value: beside the value, under it, or left out (decided per width, as the
-    // controls' place)
-    aside: "beside" | "under" | "out";
   } | null = null;
   // where the controls go, beside the value or under it: decided once per card size (_fitValue),
   // so a value that gets wider (Cleaning, Returning) is drawn smaller rather than pushing them down,
@@ -269,13 +228,10 @@ export class PosterCard extends KindCardBase {
       // the controls' place follows the width only: a card as tall as its content (rows: auto)
       // grows when they go under the value, and must not try them beside it again then
       const width = card.clientWidth;
-      const kept = this._valueFit?.width === width ? this._valueFit : null;
+      const kept = this._valueFit?.width === width ? this._valueFit.place : null;
       // controls try beside the value first
-      const place = kept?.place ?? (end ? "beside" : null);
-      // (the second value's place holds for the width too, but one left out, maybe for want of
-      // height, is tried again at a new size)
-      const aside = kept && kept.aside !== "out" ? kept.aside : "beside";
-      this._valueFit = { size, width, px: null, base: null, drop: false, place, aside };
+      const place = kept ?? (end ? "beside" : null);
+      this._valueFit = { size, width, px: null, base: null, drop: false, place };
       this._placeControls(row);
     }
     const fit = this._valueFit;
@@ -286,15 +242,6 @@ export class PosterCard extends KindCardBase {
     if (fit.px !== null) apply(fit.px);
     // a row filled again has its slider back
     if (fit.drop) drop(true);
-    // the second value where it was found to fit
-    const pvalue = big.parentElement,
-      aside = pvalue?.querySelector<HTMLElement>(":scope > .paside");
-    const placeAside = (at: "beside" | "under" | "out") => {
-      fit.aside = at;
-      pvalue?.classList.toggle("aside-under", at === "under");
-      aside?.classList.toggle("pfit-out", at === "out");
-    };
-    if (aside) placeAside(fit.aside);
     // what is missing: content taller than the row packs to its bottom and pushes the top line out
     // above it; in a body that shrinks with its picture, a part reaches past the body's bottom
     // (counting its margins: a picture reaches to the card's edge on purpose; a part placed on its
@@ -310,21 +257,6 @@ export class PosterCard extends KindCardBase {
       return Math.max(row.getBoundingClientRect().top - top.getBoundingClientRect().top, past);
     };
     const misses = () => overflows(b) || short() > 0.5;
-    // the second value gives way before the value does: under it where no line is under the value
-    // yet (a second line would push the card taller), else out; under it and short of height, out
-    if (aside && fit.aside === "beside" && overflows(b))
-      placeAside(
-        row.querySelector(":scope > .pbody > .pmain > .ptext > .secondary") ? "out" : "under",
-      );
-    // (a text under the value wider than the card: out too, it is never cut; either edge, for a
-    // right-to-left page)
-    const wide = () => {
-      if (!aside) return false;
-      const a = aside.getBoundingClientRect(),
-        r = body.getBoundingClientRect();
-      return a.right > r.right + 0.5 || a.left < r.left - 0.5;
-    };
-    if (aside && fit.aside === "under" && (short() > 0.5 || wide())) placeAside("out");
     if (!misses()) return;
     // the styled size, found once per card size
     if (fit.base === null) {

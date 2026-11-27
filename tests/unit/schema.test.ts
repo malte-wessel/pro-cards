@@ -582,29 +582,11 @@ describe("card config schemas", () => {
         "badge rule's entity",
       );
     }
-    const poster = (c: object) => validate({ type: "custom:poster-card-pro", entity: H, ...c });
-    for (const aside of [
-      false,
-      B,
-      { attribute: "temperature", decimals: 1 },
-      { entity: B, icon: "mdi:target", prefix: "→" },
-    ])
-      expect(poster({ aside }), JSON.stringify(aside)).toBeNull();
-    for (const aside of [
-      true,
-      {},
-      { icon: "mdi:x" },
-      { entity: B, color: "red" },
-      { entity: B, rules: [] },
-    ])
-      expect(poster({ aside }), JSON.stringify(aside)).toBeTruthy();
     // the line under the value: a text, or false for none
     for (const type of ["custom:poster-card-pro", "custom:tile-card-pro"]) {
       expect(validate({ type, entity: H, secondary: false })).toBeNull();
       expect(validate({ type, entity: H, secondary: true })).toBeTruthy();
     }
-    // a tile's line has no second value
-    expect(validate({ type: "custom:tile-card-pro", entity: H, aside: B })).toBeTruthy();
   });
 
   it("checks the two places: the icon and the visual", () => {

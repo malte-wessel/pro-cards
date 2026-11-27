@@ -42,64 +42,6 @@
       ],
       "description": "The status in the corner: a text or a template, or false for none. Default: the matching rule's status, else the kind's. Its look is the card's: a tag in its colour"
     },
-    "aside": {
-      "description": "A second value beside the value, smaller and in the secondary colour: an entity id, its value keys (without an entity it reads the card's: { attribute: temperature }), or false for none. Left out: the kind's (a thermostat's target where no stepper shows it)",
-      "oneOf": [
-        {
-          "const": false
-        },
-        {
-          "$ref": "defs.schema.json#/$defs/entityId"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "entity": {
-              "$ref": "defs.schema.json#/$defs/entityId"
-            },
-            "attribute": {
-              "type": "string",
-              "minLength": 1
-            },
-            "value": {
-              "type": ["string", "number"],
-              "description": "A text or a template in place of the state"
-            },
-            "unit": {
-              "type": "string"
-            },
-            "decimals": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 3
-            },
-            "format": {
-              "$ref": "#/$defs/format"
-            },
-            "prefix": {
-              "type": "string"
-            },
-            "icon": {
-              "type": "string",
-              "minLength": 1,
-              "description": "An icon before it (mdi:…)"
-            }
-          },
-          "anyOf": [
-            {
-              "required": ["entity"]
-            },
-            {
-              "required": ["attribute"]
-            },
-            {
-              "required": ["value"]
-            }
-          ],
-          "additionalProperties": false
-        }
-      ]
-    },
     "badges": {
       "type": "array",
       "description": "The badges in the corner, in this order. A badge without an entity reads the poster's: its attribute, else the poster's value",
@@ -395,19 +337,31 @@
       "type": "array",
       "items": {
         "oneOf": [
-          { "type": "string" },
-          { "type": "number" },
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
           {
             "type": "object",
             "properties": {
-              "value": { "type": ["string", "number"] },
-              "label": { "type": "string" },
-              "icon": { "$ref": "defs.schema.json#/$defs/icon" }
+              "value": {
+                "type": ["string", "number"]
+              },
+              "label": {
+                "type": "string"
+              },
+              "icon": {
+                "$ref": "defs.schema.json#/$defs/icon"
+              }
             },
             "required": ["value"],
             "additionalProperties": false
           },
-          { "$ref": "#/$defs/kindButton" }
+          {
+            "$ref": "#/$defs/kindButton"
+          }
         ]
       },
       "description": "Options of segments and select (default: the entity's modes or options, a cover's or light's favourites); with type: buttons, the domain's own buttons by name ([stop, locate]) or your own: { entity, name, icon, color, rules, tap_action, … }"
@@ -471,7 +425,9 @@
         },
         "rules": {
           "type": "array",
-          "items": { "$ref": "#/$defs/buttonRule" },
+          "items": {
+            "$ref": "#/$defs/buttonRule"
+          },
           "description": "First matching rule wins: its icon, colour, text (value), pulse and fill (active)"
         },
         "tap_action": {
@@ -483,17 +439,37 @@
           "deprecated": true,
           "description": "Deprecated, goes in 4.0: use tap_action"
         },
-        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" }
+        "visibility": {
+          "$ref": "defs.schema.json#/$defs/visibility"
+        }
       },
       "anyOf": [
-        { "required": ["entity"] },
-        { "required": ["tap_action"] },
-        { "required": ["action"] }
+        {
+          "required": ["entity"]
+        },
+        {
+          "required": ["tap_action"]
+        },
+        {
+          "required": ["action"]
+        }
       ],
       "allOf": [
-        { "not": { "required": ["label", "name"] } },
-        { "not": { "required": ["label", "show_name"] } },
-        { "not": { "required": ["action", "tap_action"] } }
+        {
+          "not": {
+            "required": ["label", "name"]
+          }
+        },
+        {
+          "not": {
+            "required": ["label", "show_name"]
+          }
+        },
+        {
+          "not": {
+            "required": ["action", "tap_action"]
+          }
+        }
       ],
       "additionalProperties": false
     },
@@ -531,7 +507,17 @@
           "$ref": "entity.schema.json#/$defs/rule/properties/pulse"
         }
       },
-      "anyOf": [{ "required": ["state"] }, { "required": ["below"] }, { "required": ["above"] }],
+      "anyOf": [
+        {
+          "required": ["state"]
+        },
+        {
+          "required": ["below"]
+        },
+        {
+          "required": ["above"]
+        }
+      ],
       "additionalProperties": false
     },
     "format": {
@@ -1421,7 +1407,10 @@
       "description": "schedule: the block data shown (the secondary line, the tooltip), each a key of the blocks' data or { key, unit, step, min, max, default }",
       "items": {
         "oneOf": [
-          { "type": "string", "minLength": 1 },
+          {
+            "type": "string",
+            "minLength": 1
+          },
           {
             "type": "object",
             "properties": {
@@ -1430,15 +1419,27 @@
                 "minLength": 1,
                 "description": "The key in the blocks' data (temperature)"
               },
-              "unit": { "type": "string", "description": "The unit written after the value" },
+              "unit": {
+                "type": "string",
+                "description": "The unit written after the value"
+              },
               "step": {
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "description": "The step the schedule card's toolbar changes it by (default 1)"
               },
-              "min": { "type": "number", "description": "The least the toolbar sets" },
-              "max": { "type": "number", "description": "The most the toolbar sets" },
-              "default": { "type": "number", "description": "A new block's value" }
+              "min": {
+                "type": "number",
+                "description": "The least the toolbar sets"
+              },
+              "max": {
+                "type": "number",
+                "description": "The most the toolbar sets"
+              },
+              "default": {
+                "type": "number",
+                "description": "A new block's value"
+              }
             },
             "required": ["key"],
             "additionalProperties": false

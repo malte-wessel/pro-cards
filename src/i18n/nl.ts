@@ -771,8 +771,6 @@ const nl: Translation = {
   "editor.card.field.attribute": "Attribuut",
   "editor.card.field.value": "Waarde",
   "editor.card.field.secondary": "Tweede regel",
-  "editor.card.field.aside": "Tweede waarde",
-  "editor.card.field.aside_attribute": "Attribuut van de tweede waarde",
   "editor.card.field.unit": "Eenheid",
   "editor.card.field.decimals": "Decimalen",
   "editor.card.field.format": "Opmaak",
@@ -783,7 +781,6 @@ const nl: Translation = {
   "editor.card.field.max": "Tot (max)",
   "editor.card.field.show_name": "Naam tonen",
   "editor.card.field.show_secondary": "Tweede regel tonen",
-  "editor.card.field.show_aside": "Tweede waarde tonen",
   "editor.card.field.show_value": "Waarde tonen",
   "editor.card.field.icon_thing": "Icoon toont",
   "editor.card.field.icon_src": "Afbeelding",
@@ -892,9 +889,6 @@ const nl: Translation = {
   "editor.card.range.empty": "Leeg: {value}",
   "editor.card.range.inverted": "Moet boven ‘Van’ liggen, anders vult er niets",
   "editor.card.help.prefix": "Vóór de waarde, zoals ~ of +",
-  "editor.card.help.aside": "Nog een waarde naast de waarde, kleiner (een doel, een voorspelling)",
-  "editor.card.help.aside_attribute":
-    "Leeg: de status; zonder entiteit voor de tweede waarde het attribuut van de kaart",
   "editor.card.help.icon_ring_entity":
     "Een andere entiteit voor de ring; leeg: de waarde van de kaart",
   "editor.card.help.suffix": "Na de waarde",

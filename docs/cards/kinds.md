@@ -448,7 +448,7 @@ The blades in the icon turn at the fan's speed and stand still while it is off. 
 
 ### Climate
 
-The current temperature, the target with a stepper, and what the thermostat is doing: Heating, Idle or Cooling. Without the stepper (`control: false`) a poster shows the target as its second value beside the temperature, a tile in its line (→ 21.0 °C). The card glows warm while it heats and cool while it cools.
+The current temperature, the target with a stepper, and what the thermostat is doing: Heating, Idle or Cooling. The card glows warm while it heats and cool while it cools.
 
 ::: live
 
