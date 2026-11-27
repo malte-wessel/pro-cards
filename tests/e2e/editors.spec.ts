@@ -432,12 +432,18 @@ test("the layout's editor adds a card from the picker and arranges its cards", a
   await e.editor.getByRole("tab", { name: "Add a card" }).click();
   await e.editor.locator("hui-card-picker button", { hasText: "Poster Card Pro" }).click();
   await expect.poll(async () => ((await e.last())?.cards as Raw[])?.length).toBe(2);
-  await expect(e.editor.locator(".tab")).toHaveText(["1Tile Pro", "2Poster Pro"]);
-  await expect(e.editor.locator(".tab").nth(1)).toHaveAttribute("aria-selected", "true");
+  await expect(e.editor.locator(".tab")).toHaveText(["1", "2"]);
+  await expect(e.editor.getByRole("tab", { name: "2 Poster Pro" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
   // the new card's own editor is open
   await expect(e.editor.locator("hui-card-element-editor poster-card-pro-editor")).toHaveCount(1);
   await e.editor.getByRole("button", { name: "Move left" }).click();
-  await expect(e.editor.locator(".tab")).toHaveText(["1Poster Pro", "2Tile Pro"]);
+  await expect(e.editor.getByRole("tab", { name: "1 Poster Pro" })).toHaveAttribute(
+    "title",
+    "Poster Pro",
+  );
   await e.editor.getByRole("button", { name: "Delete" }).click();
   await expect.poll(e.last).toEqual({ type: "custom:layout-card-pro", cards: [tile] });
 });
@@ -480,7 +486,9 @@ test("the tile group's editor edits a tile in the tile's own editor", async ({ p
     title: "Lights",
     tiles: ["light.kitchen", "light.living_room"],
   });
-  await expect(e.editor.locator(".tab")).toHaveText(["1Kitchen", "2Living room"]);
+  await expect(e.editor.locator(".tab")).toHaveText(["1", "2"]);
+  await expect(e.editor.locator(".tab").first()).toHaveAttribute("title", "Kitchen");
+  await expect(e.editor.getByRole("tab", { name: "2 Living room" })).toHaveCount(1);
   const tile = e.editor.locator("hui-card-element-editor tile-card-pro-editor ha-form").first();
   await fill(tile, "name", "Worktop");
   await expect.poll(e.last).toEqual({
@@ -488,7 +496,7 @@ test("the tile group's editor edits a tile in the tile's own editor", async ({ p
     title: "Lights",
     tiles: [{ entity: "light.kitchen", name: "Worktop" }, "light.living_room"],
   });
-  await expect(e.editor.locator(".tab").first()).toHaveText("1Worktop");
+  await expect(e.editor.locator(".tab").first()).toHaveAttribute("title", "Worktop");
 });
 
 test("the heading's style, layout and badges are set in its form", async ({ page }) => {
@@ -754,4 +762,46 @@ test("the tile's editor offers a timer's presets only where it has some", async 
   await expect(field(chosen.form, "control_attribute")).toContainText(
     "add them in its settings in Home Assistant",
   );
+});
+
+test("a container's tabs are numbered; more than its editor's width scroll by the chevrons", async ({
+  page,
+}) => {
+  const tiles = (n: number) => Array.from({ length: n }, () => "light.kitchen");
+  const e = await openEditor(page, { type: "custom:tile-group-card-pro", tiles: tiles(7) });
+  await e.editor.evaluate((el) => (el.style.cssText = "display: block; width: 440px"));
+  const tabs = e.editor.locator(".tabs");
+  const chevrons = e.editor.locator(".icon.scroll");
+  // seven tiles fit, as in Home Assistant's stack editor: no chevrons
+  await expect(e.editor.locator(".tab")).toHaveCount(7);
+  await expect(chevrons.first()).toBeHidden();
+  await expect(chevrons.last()).toBeHidden();
+  // sixteen do not: a chevron at each end, the one at the end scrolls on
+  await e.editor.evaluate(
+    (el, cfg) => (el as HTMLElement & { setConfig(c: unknown): void }).setConfig(cfg),
+    { type: "custom:tile-group-card-pro", tiles: tiles(16) },
+  );
+  await expect(e.editor.locator(".tab")).toHaveCount(16);
+  await expect(chevrons.first()).toBeVisible();
+  await expect(chevrons.last()).toBeVisible();
+  const at = () => tabs.evaluate((t) => t.scrollLeft);
+  expect(await at()).toBe(0);
+  await chevrons.last().click();
+  await expect.poll(at).toBeGreaterThan(0);
+  await chevrons.first().click();
+  await expect.poll(at).toBe(0);
+  // a tab chosen by the keyboard comes into view
+  const inView = (i: number) =>
+    e.editor
+      .locator(".tab")
+      .nth(i)
+      .evaluate((t) => {
+        const [r, bar] = [t.getBoundingClientRect(), t.parentElement!.getBoundingClientRect()];
+        return r.left >= bar.left - 1 && r.right <= bar.right + 1;
+      });
+  expect(await inView(15)).toBe(false);
+  await e.editor.locator(".tab").first().focus();
+  await page.keyboard.press("End");
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(() => inView(15)).toBe(true);
 });

@@ -42,6 +42,8 @@ const ICONS = {
   code: "M14.6,16.6L19.2,12L14.6,7.4L16,6L22,12L16,18L14.6,16.6M9.4,16.6L4.8,12L9.4,7.4L8,6L2,12L8,18L9.4,16.6Z",
   form: "M3,3H21V5H3V3M3,7H15V9H3V7M3,11H21V13H3V11M3,15H15V17H3V15M3,19H21V21H3V19Z",
   plus: "M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z",
+  back: "M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z",
+  forward: "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z",
 };
 
 const STYLE = `
@@ -50,18 +52,20 @@ const STYLE = `
   .cards { margin-top: 24px; }
   .bar { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--divider-color); }
   .tabs { display: flex; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
-  .tab { flex: none; padding: 12px 14px; border: 0; background: none; cursor: pointer; font: inherit;
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: none; min-width: 48px; padding: 12px; border: 0; background: none; cursor: pointer; font: inherit;
     font-size: var(--ha-font-size-m, 14px); color: var(--secondary-text-color);
     border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
   .tab:hover { color: var(--primary-text-color); }
   .tab[aria-selected="true"] { color: var(--primary-color); border-bottom-color: var(--primary-color); }
-  .tab .n { font-weight: var(--ha-font-weight-medium, 500); margin-right: 6px; }
   .icon { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border: 0;
     border-radius: 50%; background: none; color: var(--secondary-text-color); cursor: pointer; padding: 0; }
   .icon:hover:not([disabled]) { background: var(--secondary-background-color); color: var(--primary-text-color); }
   .icon[disabled] { opacity: 0.4; cursor: default; }
   .icon[hidden] { display: none; }
   .icon svg { width: 24px; height: 24px; fill: currentColor; }
+  .icon.scroll { width: 32px; }
+  :host(:dir(rtl)) .icon.scroll svg { transform: scaleX(-1); }
   .tools { display: flex; align-items: center; justify-content: flex-end; gap: 2px; padding: 4px 0; }
   .child { padding-top: 8px; }
   .place { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--divider-color); }
@@ -368,6 +372,7 @@ export abstract class CardsEditorBase extends HTMLElement {
       this._select(to);
       root.querySelectorAll<HTMLElement>(".tab, .icon.add")[to]?.focus();
     });
+    this._buildScroll(root.querySelector(".tabs")!);
     this._form = this._makeForm();
     root.querySelector(".options")!.appendChild(this._form);
     this._views.listen(root);
@@ -389,6 +394,49 @@ export abstract class CardsEditorBase extends HTMLElement {
     });
     this._sections.watch(f);
     return f;
+  }
+
+  // the tabs' chevrons, as Home Assistant's tab group has them: one at each end while the tabs are
+  // wider than the bar, each scrolling a bar's width (a mouse has no other way there: the bar's
+  // scrollbar is hidden; the keyboard moves between the tabs with the arrows)
+  _overflow?: () => void;
+  _buildScroll(tabs: HTMLElement) {
+    // (the way to the end: in right-to-left the scroll position runs from 0 down)
+    const way = () => (getComputedStyle(tabs).direction === "rtl" ? -1 : 1);
+    const chevron = (path: string, to: 1 | -1) => {
+      const b = this._icon(path, "", () =>
+        tabs.scrollBy({ left: to * way() * tabs.clientWidth, behavior: "smooth" }),
+      );
+      b.classList.add("scroll");
+      b.removeAttribute("title");
+      b.removeAttribute("aria-label");
+      b.setAttribute("aria-hidden", "true");
+      b.tabIndex = -1;
+      b.hidden = true;
+      return b;
+    };
+    const back = chevron(ICONS.back, -1),
+      forward = chevron(ICONS.forward, 1);
+    tabs.before(back);
+    tabs.after(forward);
+    // (shown, they narrow the bar: the tabs that overflowed without them still do; they go only
+    // when the tabs fit the narrower bar, so they fit without them too)
+    this._overflow = () => {
+      back.hidden = forward.hidden = tabs.scrollWidth <= tabs.clientWidth + 1;
+    };
+    if (typeof ResizeObserver !== "undefined") new ResizeObserver(this._overflow).observe(tabs);
+  }
+  // the selected tab scrolled into the bar's view, once per selection (a new hass leaves the bar
+  // where the user scrolled it; the dialog itself never scrolls for it)
+  _revealed?: string;
+  _reveal(tabs: HTMLElement, tab: HTMLElement | undefined, key: string) {
+    this._overflow?.();
+    if (key === this._revealed || !tab || !tabs.clientWidth) return;
+    this._revealed = key;
+    const t = tab.getBoundingClientRect(),
+      r = tabs.getBoundingClientRect();
+    if (t.left < r.left) tabs.scrollLeft -= r.left - t.left;
+    else if (t.right > r.right) tabs.scrollLeft += t.right - r.right;
   }
 
   // a tab of the bar (a card's, or "+" for the picker): only the selected one is in the tab order
@@ -436,7 +484,8 @@ export abstract class CardsEditorBase extends HTMLElement {
       form.schema = this._sections.apply(schema);
     }
 
-    // the tabs: one per card, then "+"
+    // the tabs: one per card, numbered as Home Assistant's stack editor has them (its name in the
+    // tooltip and the tab's name), then "+" beside them, out of their scroll
     // (kept and updated in place, so the focus stays on the one that has it)
     const tabs = root.querySelector(".tabs")!;
     const kept = [...tabs.children] as HTMLElement[];
@@ -444,10 +493,17 @@ export abstract class CardsEditorBase extends HTMLElement {
       let b = kept[i];
       if (!b) tabs.appendChild((b = this._button("tab", () => this._select(i))));
       this._tab(b, i === this._selected);
-      b.innerHTML = `<span class="n">${i + 1}</span>`;
-      b.append(this._cardName(c));
+      const name = this._cardName(c);
+      b.textContent = String(i + 1);
+      b.title = name;
+      b.setAttribute("aria-label", `${i + 1} ${name}`);
     });
     for (const b of kept.slice(cards.length)) b.remove();
+    this._reveal(
+      tabs as HTMLElement,
+      tabs.children[this._selected] as HTMLElement | undefined,
+      `${this._selected}/${cards.length}`,
+    );
     const bar = root.querySelector(".bar")!;
     let add = bar.querySelector<HTMLElement>(".icon.add");
     if (!add) {
