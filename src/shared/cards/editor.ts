@@ -42,30 +42,42 @@ const ICONS = {
   code: "M14.6,16.6L19.2,12L14.6,7.4L16,6L22,12L16,18L14.6,16.6M9.4,16.6L4.8,12L9.4,7.4L8,6L2,12L8,18L9.4,16.6Z",
   form: "M3,3H21V5H3V3M3,7H15V9H3V7M3,11H21V13H3V11M3,15H15V17H3V15M3,19H21V21H3V19Z",
   plus: "M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z",
-  back: "M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z",
-  forward: "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z",
 };
+// the tab bar's chevron, as Home Assistant's tab group draws it (Font Awesome's solid chevron, its
+// viewBox 320 × 512), pointing to the end; the one to the start is its mirror
+const CHEVRON =
+  "M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z";
 
 const STYLE = `
   :host { display: block; }
   [hidden] { display: none !important; }
   .cards { margin-top: 24px; }
-  .bar { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--divider-color); }
+  /* the tab bar as Home Assistant's stack editor has it (its tab group's sizes and colours): the
+     tabs numbered, in the text colour at 80 %, the selected one in the primary colour over a 2 px
+     line, the editor's line under them; + beside them as an icon button */
+  .bar { display: flex; align-items: center; border-bottom: 1px solid var(--divider-color); }
   .tabs { display: flex; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
   .tabs::-webkit-scrollbar { display: none; }
-  .tab { flex: none; min-width: 48px; padding: 12px; border: 0; background: none; cursor: pointer; font: inherit;
-    font-size: var(--ha-font-size-m, 14px); color: var(--secondary-text-color);
-    border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
-  .tab:hover { color: var(--primary-text-color); }
-  .tab[aria-selected="true"] { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+  .tab { flex: none; padding: 14px 21px; border: 0; background: none; cursor: pointer; font: inherit;
+    font-size: var(--ha-font-size-m, 14px); font-weight: var(--ha-font-weight-medium, 500); line-height: normal;
+    color: var(--primary-text-color); opacity: 0.8; border-bottom: 2px solid transparent; white-space: nowrap; }
+  @media (hover: hover) { .tab:hover:not([aria-selected="true"]) { color: var(--primary-color); } }
+  .tab[aria-selected="true"] { color: var(--primary-color); opacity: 1; border-bottom-color: var(--primary-color); }
+  .icon.add { width: 48px; height: 48px; color: var(--primary-text-color); }
+  /* a chevron at each end while the tabs overflow, in 21 px of its own; the one at the end the
+     tabs are scrolled to is not drawn, its room kept */
+  .chev { flex: none; align-self: stretch; width: 21px; display: grid; place-items: center; padding: 0;
+    border: 0; background: none; color: var(--primary-color); cursor: pointer; }
+  .chev[data-end] { visibility: hidden; }
+  .chev svg { width: 18px; height: 14px; fill: currentColor; }
+  .chev.back svg, :host(:dir(rtl)) .chev.forward svg { transform: scaleX(-1); }
+  :host(:dir(rtl)) .chev.back svg { transform: none; }
   .icon { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border: 0;
     border-radius: 50%; background: none; color: var(--secondary-text-color); cursor: pointer; padding: 0; }
   .icon:hover:not([disabled]) { background: var(--secondary-background-color); color: var(--primary-text-color); }
   .icon[disabled] { opacity: 0.4; cursor: default; }
   .icon[hidden] { display: none; }
   .icon svg { width: 24px; height: 24px; fill: currentColor; }
-  .icon.scroll { width: 32px; }
-  :host(:dir(rtl)) .icon.scroll svg { transform: scaleX(-1); }
   .tools { display: flex; align-items: center; justify-content: flex-end; gap: 2px; padding: 4px 0; }
   .child { padding-top: 8px; }
   .place { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--divider-color); }
@@ -403,27 +415,35 @@ export abstract class CardsEditorBase extends HTMLElement {
   _buildScroll(tabs: HTMLElement) {
     // (the way to the end: in right-to-left the scroll position runs from 0 down)
     const way = () => (getComputedStyle(tabs).direction === "rtl" ? -1 : 1);
-    const chevron = (path: string, to: 1 | -1) => {
-      const b = this._icon(path, "", () =>
-        tabs.scrollBy({ left: to * way() * tabs.clientWidth, behavior: "smooth" }),
-      );
-      b.classList.add("scroll");
-      b.removeAttribute("title");
-      b.removeAttribute("aria-label");
+    const chevron = (cls: string, to: 1 | -1) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = `chev ${cls}`;
+      b.innerHTML = `<svg viewBox="0 0 320 512" aria-hidden="true"><path d="${CHEVRON}"/></svg>`;
       b.setAttribute("aria-hidden", "true");
       b.tabIndex = -1;
       b.hidden = true;
+      b.addEventListener("click", () =>
+        tabs.scrollBy({ left: to * way() * tabs.clientWidth, behavior: "smooth" }),
+      );
       return b;
     };
-    const back = chevron(ICONS.back, -1),
-      forward = chevron(ICONS.forward, 1);
+    const back = chevron("back", -1),
+      forward = chevron("forward", 1);
     tabs.before(back);
     tabs.after(forward);
     // (shown, they narrow the bar: the tabs that overflowed without them still do; they go only
     // when the tabs fit the narrower bar, so they fit without them too)
+    const ends = () => {
+      const at = Math.abs(tabs.scrollLeft);
+      back.toggleAttribute("data-end", at < 1);
+      forward.toggleAttribute("data-end", at + tabs.clientWidth >= tabs.scrollWidth - 1);
+    };
     this._overflow = () => {
       back.hidden = forward.hidden = tabs.scrollWidth <= tabs.clientWidth + 1;
+      ends();
     };
+    tabs.addEventListener("scroll", ends, { passive: true });
     if (typeof ResizeObserver !== "undefined") new ResizeObserver(this._overflow).observe(tabs);
   }
   // the selected tab scrolled into the bar's view, once per selection (a new hass leaves the bar

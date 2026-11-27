@@ -771,25 +771,33 @@ test("a container's tabs are numbered; more than its editor's width scroll by th
   const e = await openEditor(page, { type: "custom:tile-group-card-pro", tiles: tiles(7) });
   await e.editor.evaluate((el) => (el.style.cssText = "display: block; width: 440px"));
   const tabs = e.editor.locator(".tabs");
-  const chevrons = e.editor.locator(".icon.scroll");
+  const [back, forward] = [e.editor.locator(".chev.back"), e.editor.locator(".chev.forward")];
   // seven tiles fit, as in Home Assistant's stack editor: no chevrons
   await expect(e.editor.locator(".tab")).toHaveCount(7);
-  await expect(chevrons.first()).toBeHidden();
-  await expect(chevrons.last()).toBeHidden();
-  // sixteen do not: a chevron at each end, the one at the end scrolls on
+  await expect(back).toBeHidden();
+  await expect(forward).toBeHidden();
+  // sixteen do not: a chevron at each end, as Home Assistant's, the one at the end the tabs are
+  // scrolled to not drawn (its room kept, so the tabs never move for it)
   await e.editor.evaluate(
     (el, cfg) => (el as HTMLElement & { setConfig(c: unknown): void }).setConfig(cfg),
     { type: "custom:tile-group-card-pro", tiles: tiles(16) },
   );
   await expect(e.editor.locator(".tab")).toHaveCount(16);
-  await expect(chevrons.first()).toBeVisible();
-  await expect(chevrons.last()).toBeVisible();
+  await expect(forward).toBeVisible();
+  await expect(back).toBeHidden();
   const at = () => tabs.evaluate((t) => t.scrollLeft);
-  expect(await at()).toBe(0);
-  await chevrons.last().click();
+  const left = () => tabs.evaluate((t) => Math.round(t.getBoundingClientRect().left));
+  const start = await left();
+  await forward.click();
   await expect.poll(at).toBeGreaterThan(0);
-  await chevrons.first().click();
-  await expect.poll(at).toBe(0);
+  await expect(back).toBeVisible();
+  expect(await left()).toBe(start);
+  await tabs.evaluate((t) => (t.scrollLeft = t.scrollWidth));
+  await expect(forward).toBeHidden();
+  await back.click();
+  await expect(forward).toBeVisible();
+  await tabs.evaluate((t) => (t.scrollLeft = 0));
+  await expect(back).toBeHidden();
   // a tab chosen by the keyboard comes into view
   const inView = (i: number) =>
     e.editor
