@@ -440,10 +440,12 @@ test("the layout's editor adds a card from the picker and arranges its cards", a
   // the new card's own editor is open
   await expect(e.editor.locator("hui-card-element-editor poster-card-pro-editor")).toHaveCount(1);
   await e.editor.getByRole("button", { name: "Move left" }).click();
-  await expect(e.editor.getByRole("tab", { name: "1 Poster Pro" })).toHaveAttribute(
-    "title",
-    "Poster Pro",
-  );
+  await expect
+    .poll(() =>
+      e.editor.locator(".tab").evaluateAll((ts) => ts.map((t) => t.getAttribute("aria-label"))),
+    )
+    .toEqual(["1 Poster Pro", "2 Tile Pro"]);
+  await expect(e.editor.locator(".tab").first()).toHaveAttribute("title", "Poster Pro");
   await e.editor.getByRole("button", { name: "Delete" }).click();
   await expect.poll(e.last).toEqual({ type: "custom:layout-card-pro", cards: [tile] });
 });
@@ -791,6 +793,10 @@ test("a container's tabs are numbered; more than its editor's width scroll by th
   await forward.click();
   await expect.poll(at).toBeGreaterThan(0);
   await expect(back).toBeVisible();
+  // (a chevron takes no focus: it is hidden from the tabs' keyboard)
+  expect(
+    await e.editor.evaluate((el) => !!el.shadowRoot!.activeElement?.classList.contains("chev")),
+  ).toBe(false);
   expect(await left()).toBe(start);
   await tabs.evaluate((t) => (t.scrollLeft = t.scrollWidth));
   await expect(forward).toBeHidden();
@@ -798,18 +804,18 @@ test("a container's tabs are numbered; more than its editor's width scroll by th
   await expect(forward).toBeVisible();
   await tabs.evaluate((t) => (t.scrollLeft = 0));
   await expect(back).toBeHidden();
-  // a tab chosen by the keyboard comes into view
-  const inView = (i: number) =>
-    e.editor
-      .locator(".tab")
-      .nth(i)
-      .evaluate((t) => {
-        const [r, bar] = [t.getBoundingClientRect(), t.parentElement!.getBoundingClientRect()];
-        return r.left >= bar.left - 1 && r.right <= bar.right + 1;
-      });
-  expect(await inView(15)).toBe(false);
-  await e.editor.locator(".tab").first().focus();
-  await page.keyboard.press("End");
-  await page.keyboard.press("ArrowLeft");
-  await expect.poll(() => inView(15)).toBe(true);
+  // a selection that moves past the bar's edge by a tool (Move right, not the keyboard, which
+  // focuses the tab) brings its tab into view
+  const shown = () =>
+    e.editor.locator(".tab[aria-selected=true]").evaluate((t) => {
+      const [r, bar] = [t.getBoundingClientRect(), t.parentElement!.getBoundingClientRect()];
+      return r.left >= bar.left - 1 && r.right <= bar.right + 1;
+    });
+  await e.editor.locator(".tab").nth(4).click();
+  for (let i = 5; i <= 12; i++) {
+    await e.editor.getByRole("button", { name: "Move right" }).click();
+    await expect(e.editor.locator(".tab").nth(i)).toHaveAttribute("aria-selected", "true");
+    expect(await shown()).toBe(true);
+  }
+  expect(await at()).toBeGreaterThan(0);
 });

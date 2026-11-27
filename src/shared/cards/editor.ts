@@ -423,6 +423,8 @@ export abstract class CardsEditorBase extends HTMLElement {
       b.setAttribute("aria-hidden", "true");
       b.tabIndex = -1;
       b.hidden = true;
+      // (a click leaves the focus where it was: on the selected tab, not on a hidden button)
+      b.addEventListener("mousedown", (ev) => ev.preventDefault());
       b.addEventListener("click", () =>
         tabs.scrollBy({ left: to * way() * tabs.clientWidth, behavior: "smooth" }),
       );
@@ -445,14 +447,21 @@ export abstract class CardsEditorBase extends HTMLElement {
     };
     tabs.addEventListener("scroll", ends, { passive: true });
     if (typeof ResizeObserver !== "undefined") new ResizeObserver(this._overflow).observe(tabs);
+    // (the tabs' width changes when the font arrives after the first render)
+    void document.fonts?.ready.then(() => this._overflow?.());
   }
   // the selected tab scrolled into the bar's view, once per selection (a new hass leaves the bar
   // where the user scrolled it; the dialog itself never scrolls for it)
   _revealed?: string;
-  _reveal(tabs: HTMLElement, tab: HTMLElement | undefined, key: string) {
+  _reveal() {
     this._overflow?.();
-    if (key === this._revealed || !tab || !tabs.clientWidth) return;
+    const tabs = this.shadowRoot!.querySelector<HTMLElement>(".tabs")!;
+    const key = `${this._selected}/${this._cards.length}`;
+    const was = this._revealed;
     this._revealed = key;
+    // ("+" selected: nothing in the bar to show; the bar at no width: nothing to measure)
+    const tab = tabs.children[this._selected];
+    if (key === was || !tab || !tabs.clientWidth) return;
     const t = tab.getBoundingClientRect(),
       r = tabs.getBoundingClientRect();
     if (t.left < r.left) tabs.scrollLeft -= r.left - t.left;
@@ -519,11 +528,7 @@ export abstract class CardsEditorBase extends HTMLElement {
       b.setAttribute("aria-label", `${i + 1} ${name}`);
     });
     for (const b of kept.slice(cards.length)) b.remove();
-    this._reveal(
-      tabs as HTMLElement,
-      tabs.children[this._selected] as HTMLElement | undefined,
-      `${this._selected}/${cards.length}`,
-    );
+    this._reveal();
     const bar = root.querySelector(".bar")!;
     let add = bar.querySelector<HTMLElement>(".icon.add");
     if (!add) {
