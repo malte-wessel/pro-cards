@@ -459,15 +459,7 @@ export abstract class KindCardBase extends EntityCardBase {
       delete o.word;
       delete o.num;
     }
-    // (a written line under the value replaces what the kind says there, and a text of its own
-    // what it says beside the value: a thermostat's target, which was its line; `secondary: false`
-    // only hides the line)
-    if (raw.secondary !== undefined) {
-      delete o.secondary;
-      if (raw.secondary !== false) delete o.aside;
-    }
-    // (a poster's own second value, or aside: false, in place of the kind's)
-    if (raw.aside !== undefined) delete o.aside;
+    if (raw.secondary !== undefined) delete o.secondary;
     // the value as `format` writes it (a timer's time left) where the kind writes none, and in
     // place of the kind's where the card writes a format that applies (a plug's power in kW)
     if (o.value === undefined || (raw.format !== undefined && c.ent.format !== "auto")) {

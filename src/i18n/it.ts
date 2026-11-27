@@ -104,10 +104,6 @@ const it: Translation = {
   "popup.open": "Apri",
   "popup.close": "Chiudi",
   "popup.name": "Pop-up",
-  "popup.section_missing": "Nessuna sezione «{section}» in quella dashboard e vista",
-  "popup.section_generated":
-    "Quella dashboard è generata da una strategia: non ha sezioni da mostrare",
-  "popup.section_unreadable": "Impossibile leggere quella dashboard",
   "group.stub_title": "Gruppo",
   "sections.stub_title": "Sezione",
   "heading.stub_title": "Intestazione",
@@ -776,8 +772,6 @@ const it: Translation = {
   "editor.card.field.attribute": "Attributo",
   "editor.card.field.value": "Valore",
   "editor.card.field.secondary": "Riga secondaria",
-  "editor.card.field.aside": "Secondo valore",
-  "editor.card.field.aside_attribute": "Attributo del secondo valore",
   "editor.card.field.unit": "Unità",
   "editor.card.field.decimals": "Decimali",
   "editor.card.field.format": "Formato",
@@ -788,7 +782,6 @@ const it: Translation = {
   "editor.card.field.max": "A (max)",
   "editor.card.field.show_name": "Mostra il nome",
   "editor.card.field.show_secondary": "Mostra riga secondaria",
-  "editor.card.field.show_aside": "Mostra secondo valore",
   "editor.card.field.show_value": "Mostra il valore",
   "editor.card.field.icon_thing": "L'icona mostra",
   "editor.card.field.icon_src": "Immagine",
@@ -897,10 +890,6 @@ const it: Translation = {
   "editor.card.range.empty": "Vuoto: {value}",
   "editor.card.range.inverted": "Deve essere maggiore di «Da», altrimenti non si riempie nulla",
   "editor.card.help.prefix": "Prima del valore, come ~ o +",
-  "editor.card.help.aside":
-    "Un altro valore accanto al valore, più piccolo (un obiettivo, una previsione)",
-  "editor.card.help.aside_attribute":
-    "Vuoto: il suo stato; senza entità del secondo valore, l'attributo della scheda",
   "editor.card.help.icon_ring_entity":
     "Un'altra entità per l'anello; vuoto: il valore della scheda",
   "editor.card.help.suffix": "Dopo il valore",
@@ -1016,16 +1005,6 @@ const it: Translation = {
   "editor.cards.width.full": "Larghezza piena",
   "editor.cards.popup_height.auto": "Alta quanto le sue schede",
   "editor.cards.popup_height.full": "Altezza piena",
-  "editor.cards.section_source": "Sezione di una dashboard",
-  "editor.cards.field.section_dashboard": "Dashboard",
-  "editor.cards.field.section_view": "Vista",
-  "editor.cards.field.section_title": "Sezione",
-  "editor.cards.help.section_dashboard":
-    "Il suo indirizzo, es. dashboard-stanze. Vuoto: questa dashboard",
-  "editor.cards.help.section_view":
-    "Il suo percorso o numero, da 0. Vuoto: questa vista, altrimenti la prima",
-  "editor.cards.help.section_title":
-    "L'intestazione della sezione. Le sue schede vengono prima di quelle del pop-up",
   "editor.cards.help.hash":
     "Un'azione di navigazione verso #cucina apre il pop-up con l'hash cucina",
   "editor.cards.help.width": "Su uno schermo largo; un telefono mostra un pannello dal basso",

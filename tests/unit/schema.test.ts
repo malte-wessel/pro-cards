@@ -547,7 +547,7 @@ describe("card config schemas", () => {
     ).toBeTruthy();
   });
 
-  it("checks a ring of another entity and a poster's second value", () => {
+  it("checks a ring of another entity and the line under the value", () => {
     const H = "sensor.living_room_humidity",
       B = "sensor.battery_soc";
     for (const type of ["custom:poster-card-pro", "custom:tile-card-pro"]) {
@@ -582,29 +582,11 @@ describe("card config schemas", () => {
         "badge rule's entity",
       );
     }
-    const poster = (c: object) => validate({ type: "custom:poster-card-pro", entity: H, ...c });
-    for (const aside of [
-      false,
-      B,
-      { attribute: "temperature", decimals: 1 },
-      { entity: B, icon: "mdi:target", prefix: "→" },
-    ])
-      expect(poster({ aside }), JSON.stringify(aside)).toBeNull();
-    for (const aside of [
-      true,
-      {},
-      { icon: "mdi:x" },
-      { entity: B, color: "red" },
-      { entity: B, rules: [] },
-    ])
-      expect(poster({ aside }), JSON.stringify(aside)).toBeTruthy();
     // the line under the value: a text, or false for none
     for (const type of ["custom:poster-card-pro", "custom:tile-card-pro"]) {
       expect(validate({ type, entity: H, secondary: false })).toBeNull();
       expect(validate({ type, entity: H, secondary: true })).toBeTruthy();
     }
-    // a tile's line has no second value
-    expect(validate({ type: "custom:tile-card-pro", entity: H, aside: B })).toBeTruthy();
   });
 
   it("checks the two places: the icon and the visual", () => {
@@ -1087,14 +1069,6 @@ describe("card config schemas", () => {
     expect(same({ type: PU, hash: "a", width: "wide", height: "full" })).toBe(true);
     expect(same({ type: PU, hash: "a", width: "huge" })).toBe(false);
     expect(same({ type: PU, hash: "a", height: "half" })).toBe(false);
-    for (const section of [
-      { title: "Kitchen" },
-      { dashboard: "dashboard-rooms", view: "rooms", title: "Kitchen" },
-      { view: 0, index: 1 },
-    ])
-      expect(same({ type: PU, hash: "a", section }), JSON.stringify(section)).toBe(true);
-    for (const section of [{ view: "rooms" }, { title: "K", room: 1 }, { index: -1 }, "Kitchen"])
-      expect(same({ type: PU, hash: "a", section }), JSON.stringify(section)).toBe(false);
     // a pop-up inside a layout card is checked against its own schema
     expect(validate({ type: "custom:layout-card-pro", cards: [{ type: PU }] })).not.toBeNull();
   });

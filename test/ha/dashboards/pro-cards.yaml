@@ -66,14 +66,6 @@ views:
             entity: light.living_room
             name: Living room (Pro tile)
             tap_action: { action: navigate, navigation_path: "#living-room" }
-          # the "3.0 cards" section of this view, its heading the pop-up's header
-          - type: custom:tile-card-pro
-            entity: sensor.outdoor_temperature
-            name: 3.0 cards (a section)
-            tap_action: { action: navigate, navigation_path: "#three-oh" }
-          - type: custom:popup-card-pro
-            hash: three-oh
-            section: { title: 3.0 cards }
       # schedules: the card edits the ones made in the UI (an administrator), not the YAML one
       - type: grid
         cards:

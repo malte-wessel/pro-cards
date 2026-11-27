@@ -104,10 +104,6 @@ const pt: Translation = {
   "popup.open": "Abrir",
   "popup.close": "Fechar",
   "popup.name": "Janela pop-up",
-  "popup.section_missing": "Nenhuma secção «{section}» nesse painel e vista",
-  "popup.section_generated":
-    "Esse painel é gerado por uma estratégia: não tem secções para mostrar",
-  "popup.section_unreadable": "Não foi possível ler esse painel",
   "group.stub_title": "Grupo",
   "sections.stub_title": "Secção",
   "heading.stub_title": "Cabeçalho",
@@ -776,8 +772,6 @@ const pt: Translation = {
   "editor.card.field.attribute": "Atributo",
   "editor.card.field.value": "Valor",
   "editor.card.field.secondary": "Linha secundária",
-  "editor.card.field.aside": "Segundo valor",
-  "editor.card.field.aside_attribute": "Atributo do segundo valor",
   "editor.card.field.unit": "Unidade",
   "editor.card.field.decimals": "Casas decimais",
   "editor.card.field.format": "Formato",
@@ -788,7 +782,6 @@ const pt: Translation = {
   "editor.card.field.max": "Até (máx)",
   "editor.card.field.show_name": "Mostrar nome",
   "editor.card.field.show_secondary": "Mostrar linha secundária",
-  "editor.card.field.show_aside": "Mostrar segundo valor",
   "editor.card.field.show_value": "Mostrar valor",
   "editor.card.field.icon_thing": "O ícone mostra",
   "editor.card.field.icon_src": "Imagem",
@@ -897,9 +890,6 @@ const pt: Translation = {
   "editor.card.range.empty": "Vazio: {value}",
   "editor.card.range.inverted": "Tem de ser superior a «De», ou nada enche",
   "editor.card.help.prefix": "Antes do valor, como ~ ou +",
-  "editor.card.help.aside": "Outro valor ao lado do valor, menor (um alvo, uma previsão)",
-  "editor.card.help.aside_attribute":
-    "Vazio: o seu estado; sem entidade do segundo valor, o atributo do cartão",
   "editor.card.help.icon_ring_entity": "Outra entidade para o anel; vazio: o valor do cartão",
   "editor.card.help.suffix": "Depois do valor",
   "editor.card.help.found": "Encontrado no dispositivo: {entity}",
@@ -1013,15 +1003,6 @@ const pt: Translation = {
   "editor.cards.width.full": "Largura total",
   "editor.cards.popup_height.auto": "Tão alta como os cartões",
   "editor.cards.popup_height.full": "Altura total",
-  "editor.cards.section_source": "Secção de um painel",
-  "editor.cards.field.section_dashboard": "Painel",
-  "editor.cards.field.section_view": "Vista",
-  "editor.cards.field.section_title": "Secção",
-  "editor.cards.help.section_dashboard":
-    "O seu endereço, p. ex. dashboard-divisoes. Vazio: este painel",
-  "editor.cards.help.section_view":
-    "O seu caminho ou número, a partir de 0. Vazio: esta vista, senão a primeira",
-  "editor.cards.help.section_title": "O título da secção. Os seus cartões vêm antes dos da janela",
   "editor.cards.help.hash": "Uma ação de navegar para #cozinha abre a janela com o hash cozinha",
   "editor.cards.help.width": "Num ecrã largo; um telemóvel mostra um painel a partir de baixo",
   "editor.cards.help.unfold":

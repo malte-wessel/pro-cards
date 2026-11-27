@@ -601,17 +601,11 @@ add("po-colour", [
   p("sensor.outdoor_temperature", { rules: [{ above: 0, color: "red", pulse: true }] }),
   p("light.kitchen", { rules: [{ state: "off", color: "grey", status: "Dark" }], color: "purple" }),
 ]);
-// a second value beside the value (another entity's, a thermostat's target, one under a narrow
-// poster's value) and a ring of another entity around the icon and a badge's
-add("po-aside-ring", [
+// a ring of another entity around the icon and a badge's
+add("po-ring", [
   p("sensor.living_room_temperature", {
-    aside: { entity: "climate.living_room", attribute: "temperature" },
     icon: { ring: { entity: "sensor.battery_soc", color: "orange" } },
     badges: [{ entity: "climate.living_room", icon: { ring: "sensor.battery_soc" } }],
-  }),
-  p("climate.living_room", { control: false }),
-  p("sensor.living_room_temperature", {
-    aside: "sensor.outdoor_temperature",
   }),
   p("person.malte", { icon: { ring: "sensor.phone_battery" } }),
 ]);

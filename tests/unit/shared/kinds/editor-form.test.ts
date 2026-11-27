@@ -15,7 +15,6 @@ import {
   conditionFromForm,
   conditionToForm,
   configToForm,
-  fitAside,
   formToConfig,
   seriesFromForm,
   seriesToForm,
@@ -1224,7 +1223,7 @@ describe("the editor form: your own buttons", () => {
   });
 });
 
-describe("the editor form: a ring of another entity and a second value", () => {
+describe("the editor form: a ring of another entity", () => {
   const TEMP = { type: "custom:poster-card-pro", entity: "sensor.living_room_temperature" };
   const RING = { entity: "sensor.battery_soc", max: 80, color: "orange" };
 
@@ -1260,84 +1259,10 @@ describe("the editor form: a ring of another entity and a second value", () => {
     expect(item.more).toEqual({ icon: { ring: "sensor.battery_soc" } });
     expect(badgeFromForm(item)).toEqual(b);
   });
-
-  it("writes a poster's second value from its entity, the rest as written", () => {
-    expect(formOf({ ...TEMP, aside: "sensor.outdoor_temperature" }).aside).toBe(
-      "sensor.outdoor_temperature",
-    );
-    expect(edit(TEMP, { aside: "sensor.outdoor_temperature" })).toMatchObject({
-      aside: "sensor.outdoor_temperature",
-    });
-    const written = { entity: "climate.living_room", attribute: "temperature", decimals: 1 };
-    expect(edit({ ...TEMP, aside: written }, { aside: "climate.bedroom" }).aside).toEqual({
-      ...written,
-      entity: "climate.bedroom",
-    });
-    // cleared: an attribute stays, reading the card's entity; nothing else to say, it goes
-    expect(edit({ ...TEMP, aside: written }, { aside: "" }).aside).toEqual({
-      attribute: "temperature",
-      decimals: 1,
-    });
-    expect(
-      edit({ ...TEMP, aside: "sensor.outdoor_temperature" }, { aside: "" }),
-    ).not.toHaveProperty("aside");
-    // the tile has none
-    expect(formOf({ ...TILE }, "tile")).not.toHaveProperty("aside");
-  });
 });
 
-describe("the editor form: the second value's attribute and the line under the value", () => {
+describe("the editor form: the line under the value", () => {
   const TEMP = { type: "custom:poster-card-pro", entity: "sensor.living_room_temperature" };
-  const CLIMATE = { type: "custom:poster-card-pro", entity: "climate.living_room" };
-  const attrs: Record<string, string[]> = {
-    "climate.living_room": ["temperature", "current_temperature"],
-    "sensor.outdoor_aqi": ["unit_of_measurement"],
-    "sensor.living_room_temperature": ["unit_of_measurement"],
-  };
-  const attrsOf = (id: string) => attrs[id] ?? null;
-
-  it("shows the attribute a second value reads, and writes it back", () => {
-    const aside = { entity: "climate.living_room", attribute: "temperature" };
-    expect(formOf({ ...TEMP, aside })).toMatchObject({
-      aside: "climate.living_room",
-      aside_attribute: "temperature",
-    });
-    expect(
-      edit(TEMP, { aside: "climate.living_room", aside_attribute: "temperature" }).aside,
-    ).toEqual(aside);
-    // the card's attribute: no entity of its own
-    expect(edit(CLIMATE, { aside_attribute: "temperature" }).aside).toEqual({
-      attribute: "temperature",
-    });
-    // cleared: the entity alone is its id
-    expect(edit({ ...TEMP, aside }, { aside_attribute: "" }).aside).toBe("climate.living_room");
-  });
-
-  it("drops an attribute the entity it reads does not have", () => {
-    // another entity for the second value
-    expect(
-      fitAside(
-        { ...TEMP, aside: { entity: "sensor.outdoor_aqi", attribute: "temperature", decimals: 1 } },
-        attrsOf,
-      ),
-    ).toMatchObject({ aside: { entity: "sensor.outdoor_aqi", decimals: 1 } });
-    expect(
-      fitAside(
-        { ...TEMP, aside: { entity: "sensor.outdoor_aqi", attribute: "temperature" } },
-        attrsOf,
-      ).aside,
-    ).toBe("sensor.outdoor_aqi");
-    // another entity for the card while the second value reads the card's: nothing left, it goes
-    expect(fitAside({ ...TEMP, aside: { attribute: "temperature" } }, attrsOf)).not.toHaveProperty(
-      "aside",
-    );
-    // what the entity has stays; an entity not known keeps it
-    const kept = { ...CLIMATE, aside: { attribute: "temperature" } };
-    expect(fitAside(kept, attrsOf)).toBe(kept);
-    const unknown = { ...TEMP, aside: { entity: "sensor.gone", attribute: "x" } };
-    expect(fitAside(unknown, attrsOf)).toBe(unknown);
-  });
-
   it("turns the line under the value off and on", () => {
     expect(formOf(TEMP).show_secondary).toBe(true);
     expect(formOf({ ...TEMP, secondary: false })).toMatchObject({
@@ -1351,46 +1276,5 @@ describe("the editor form: the second value's attribute and the line under the v
     expect(edit({ ...TEMP, secondary: "Hi" }, { name: "x" }).secondary).toBe("Hi");
     // on a tile too
     expect(edit(TILE, { show_secondary: false }, "tile").secondary).toBe(false);
-  });
-});
-
-describe("the poster's editor: a second value fitted only when an entity changes", () => {
-  type Editor = HTMLElement & {
-    _hass: unknown;
-    _thing: string;
-    _fromData(d: HaFormData, prev: CardConfigBase): CardConfigBase;
-  };
-  const editor = () => {
-    const ed = document.createElement("poster-card-pro-editor") as Editor;
-    ed._hass = hass;
-    return ed;
-  };
-  const CARD = {
-    type: "custom:poster-card-pro",
-    entity: "sensor.living_room_temperature",
-    aside: { entity: "climate.living_room", attribute: "temperature" },
-  };
-  const run = (cfg: Raw, change: HaFormData) => {
-    const form = formOf(cfg);
-    return editor()._fromData({ ...form, ...change }, cfg as CardConfigBase) as Raw;
-  };
-
-  it("drops an attribute the newly picked entity lacks", () => {
-    expect(run(CARD, { aside: "sensor.outdoor_aqi" }).aside).toBe("sensor.outdoor_aqi");
-  });
-  it("keeps what it reads on any other edit, also while its entity lacks the attribute", () => {
-    // (an unavailable thermostat has no attributes: renaming the card must not lose them)
-    const gone = { ...CARD, aside: { entity: "climate.shed", attribute: "temperature" } };
-    expect(run(gone, { name: "Shed" }).aside).toEqual(gone.aside);
-  });
-  it("drops the card's attribute it reads when the card's entity changes", () => {
-    const own = { ...CARD, entity: "climate.living_room", aside: { attribute: "temperature" } };
-    expect(run(own, { entity: "sensor.outdoor_aqi" })).not.toHaveProperty("aside");
-  });
-  it("turns the second value off, the kind's too, and on again", () => {
-    expect(run(CARD, { show_aside: false }).aside).toBe(false);
-    const off = { ...CARD, aside: false };
-    expect(formOf(off)).toMatchObject({ show_aside: false, aside: "" });
-    expect(run(off, { show_aside: true })).not.toHaveProperty("aside");
   });
 });

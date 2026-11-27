@@ -104,9 +104,6 @@ const es: Translation = {
   "popup.open": "Abrir",
   "popup.close": "Cerrar",
   "popup.name": "Ventana emergente",
-  "popup.section_missing": "No hay ninguna sección «{section}» en ese panel y esa vista",
-  "popup.section_generated": "Ese panel lo genera una estrategia: no tiene secciones que mostrar",
-  "popup.section_unreadable": "No se pudo leer ese panel",
   "group.stub_title": "Grupo",
   "sections.stub_title": "Sección",
   "heading.stub_title": "Encabezado",
@@ -776,8 +773,6 @@ const es: Translation = {
   "editor.card.field.attribute": "Atributo",
   "editor.card.field.value": "Valor",
   "editor.card.field.secondary": "Línea secundaria",
-  "editor.card.field.aside": "Segundo valor",
-  "editor.card.field.aside_attribute": "Atributo del segundo valor",
   "editor.card.field.unit": "Unidad",
   "editor.card.field.decimals": "Decimales",
   "editor.card.field.format": "Formato",
@@ -788,7 +783,6 @@ const es: Translation = {
   "editor.card.field.max": "Hasta (máx.)",
   "editor.card.field.show_name": "Mostrar nombre",
   "editor.card.field.show_secondary": "Mostrar línea secundaria",
-  "editor.card.field.show_aside": "Mostrar segundo valor",
   "editor.card.field.show_value": "Mostrar valor",
   "editor.card.field.icon_thing": "El icono muestra",
   "editor.card.field.icon_src": "Imagen",
@@ -897,9 +891,6 @@ const es: Translation = {
   "editor.card.range.empty": "Vacío: {value}",
   "editor.card.range.inverted": "Debe ser mayor que «Desde»; si no, no se llena nada",
   "editor.card.help.prefix": "Antes del valor, como ~ o +",
-  "editor.card.help.aside": "Otro valor junto al valor, más pequeño (un objetivo, un pronóstico)",
-  "editor.card.help.aside_attribute":
-    "Vacío: su estado; sin entidad del segundo valor, el atributo de la tarjeta",
   "editor.card.help.icon_ring_entity": "Otra entidad para el anillo; vacío: el valor de la tarjeta",
   "editor.card.help.suffix": "Después del valor",
   "editor.card.help.found": "Encontrado en el dispositivo: {entity}",
@@ -1014,16 +1005,6 @@ const es: Translation = {
   "editor.cards.width.full": "Ancho completo",
   "editor.cards.popup_height.auto": "Tan alta como sus tarjetas",
   "editor.cards.popup_height.full": "Altura completa",
-  "editor.cards.section_source": "Sección de un panel",
-  "editor.cards.field.section_dashboard": "Panel",
-  "editor.cards.field.section_view": "Vista",
-  "editor.cards.field.section_title": "Sección",
-  "editor.cards.help.section_dashboard":
-    "Su dirección, p. ej. dashboard-habitaciones. Vacío: este panel",
-  "editor.cards.help.section_view":
-    "Su ruta o número, desde 0. Vacío: esta vista, si no la primera",
-  "editor.cards.help.section_title":
-    "El encabezado de la sección. Sus tarjetas van antes de las de la ventana",
   "editor.cards.help.hash": "Una acción de navegar a #cocina abre la ventana con el hash cocina",
   "editor.cards.help.width": "En una pantalla ancha; un móvil muestra una hoja desde abajo",
   "editor.cards.help.unfold":

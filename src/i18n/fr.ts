@@ -104,10 +104,6 @@ const fr: Translation = {
   "popup.open": "Ouvrir",
   "popup.close": "Fermer",
   "popup.name": "Fenêtre contextuelle",
-  "popup.section_missing": "Aucune section « {section} » dans ce tableau de bord et cette vue",
-  "popup.section_generated":
-    "Ce tableau de bord est généré par une stratégie : il n'a pas de sections à montrer",
-  "popup.section_unreadable": "Ce tableau de bord n'a pas pu être lu",
   "group.stub_title": "Groupe",
   "sections.stub_title": "Section",
   "heading.stub_title": "Titre",
@@ -777,8 +773,6 @@ const fr: Translation = {
   "editor.card.field.attribute": "Attribut",
   "editor.card.field.value": "Valeur",
   "editor.card.field.secondary": "Ligne secondaire",
-  "editor.card.field.aside": "Deuxième valeur",
-  "editor.card.field.aside_attribute": "Attribut de la deuxième valeur",
   "editor.card.field.unit": "Unité",
   "editor.card.field.decimals": "Décimales",
   "editor.card.field.format": "Format",
@@ -789,7 +783,6 @@ const fr: Translation = {
   "editor.card.field.max": "À (max)",
   "editor.card.field.show_name": "Afficher le nom",
   "editor.card.field.show_secondary": "Afficher la ligne secondaire",
-  "editor.card.field.show_aside": "Afficher la deuxième valeur",
   "editor.card.field.show_value": "Afficher la valeur",
   "editor.card.field.icon_thing": "L'icône affiche",
   "editor.card.field.icon_src": "Image",
@@ -898,10 +891,6 @@ const fr: Translation = {
   "editor.card.range.empty": "Vide : {value}",
   "editor.card.range.inverted": "Doit être supérieur à « De », sinon rien ne se remplit",
   "editor.card.help.prefix": "Avant la valeur, comme ~ ou +",
-  "editor.card.help.aside":
-    "Une autre valeur à côté de la valeur, plus petite (une consigne, une prévision)",
-  "editor.card.help.aside_attribute":
-    "Vide : son état ; sans entité pour la deuxième valeur, l'attribut de la carte",
   "editor.card.help.icon_ring_entity":
     "Une autre entité pour l'anneau ; vide : la valeur de la carte",
   "editor.card.help.suffix": "Après la valeur",
@@ -1017,16 +1006,6 @@ const fr: Translation = {
   "editor.cards.width.full": "Pleine largeur",
   "editor.cards.popup_height.auto": "Aussi haute que ses cartes",
   "editor.cards.popup_height.full": "Pleine hauteur",
-  "editor.cards.section_source": "Section d'un tableau de bord",
-  "editor.cards.field.section_dashboard": "Tableau de bord",
-  "editor.cards.field.section_view": "Vue",
-  "editor.cards.field.section_title": "Section",
-  "editor.cards.help.section_dashboard":
-    "Son adresse, p. ex. dashboard-pieces. Vide : ce tableau de bord",
-  "editor.cards.help.section_view":
-    "Son chemin ou son numéro, à partir de 0. Vide : cette vue, sinon la première",
-  "editor.cards.help.section_title":
-    "Le titre de la section. Ses cartes précèdent celles de la fenêtre",
   "editor.cards.help.hash":
     "Une action de navigation vers #cuisine ouvre la fenêtre au hash cuisine",
   "editor.cards.help.width": "Sur un écran large ; un téléphone affiche un panneau depuis le bas",

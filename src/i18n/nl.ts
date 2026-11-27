@@ -104,10 +104,6 @@ const nl: Translation = {
   "popup.open": "Openen",
   "popup.close": "Sluiten",
   "popup.name": "Pop-up",
-  "popup.section_missing": "Geen sectie ‘{section}’ op dat dashboard en die weergave",
-  "popup.section_generated":
-    "Dat dashboard wordt door een strategie gemaakt: het heeft geen secties om te tonen",
-  "popup.section_unreadable": "Dat dashboard kon niet worden gelezen",
   "group.stub_title": "Groep",
   "sections.stub_title": "Sectie",
   "heading.stub_title": "Kop",
@@ -775,8 +771,6 @@ const nl: Translation = {
   "editor.card.field.attribute": "Attribuut",
   "editor.card.field.value": "Waarde",
   "editor.card.field.secondary": "Tweede regel",
-  "editor.card.field.aside": "Tweede waarde",
-  "editor.card.field.aside_attribute": "Attribuut van de tweede waarde",
   "editor.card.field.unit": "Eenheid",
   "editor.card.field.decimals": "Decimalen",
   "editor.card.field.format": "Opmaak",
@@ -787,7 +781,6 @@ const nl: Translation = {
   "editor.card.field.max": "Tot (max)",
   "editor.card.field.show_name": "Naam tonen",
   "editor.card.field.show_secondary": "Tweede regel tonen",
-  "editor.card.field.show_aside": "Tweede waarde tonen",
   "editor.card.field.show_value": "Waarde tonen",
   "editor.card.field.icon_thing": "Icoon toont",
   "editor.card.field.icon_src": "Afbeelding",
@@ -896,9 +889,6 @@ const nl: Translation = {
   "editor.card.range.empty": "Leeg: {value}",
   "editor.card.range.inverted": "Moet boven ‘Van’ liggen, anders vult er niets",
   "editor.card.help.prefix": "Vóór de waarde, zoals ~ of +",
-  "editor.card.help.aside": "Nog een waarde naast de waarde, kleiner (een doel, een voorspelling)",
-  "editor.card.help.aside_attribute":
-    "Leeg: de status; zonder entiteit voor de tweede waarde het attribuut van de kaart",
   "editor.card.help.icon_ring_entity":
     "Een andere entiteit voor de ring; leeg: de waarde van de kaart",
   "editor.card.help.suffix": "Na de waarde",
@@ -1015,15 +1005,6 @@ const nl: Translation = {
   "editor.cards.width.full": "Volle breedte",
   "editor.cards.popup_height.auto": "Zo hoog als de kaarten",
   "editor.cards.popup_height.full": "Volle hoogte",
-  "editor.cards.section_source": "Sectie van een dashboard",
-  "editor.cards.field.section_dashboard": "Dashboard",
-  "editor.cards.field.section_view": "Weergave",
-  "editor.cards.field.section_title": "Sectie",
-  "editor.cards.help.section_dashboard": "Het adres, bijv. dashboard-kamers. Leeg: dit dashboard",
-  "editor.cards.help.section_view":
-    "Het pad of nummer, vanaf 0. Leeg: deze weergave, anders de eerste",
-  "editor.cards.help.section_title":
-    "De kop van de sectie. Haar kaarten komen vóór die van de pop-up",
   "editor.cards.help.hash": "Een navigeeractie naar #keuken opent de pop-up met de hash keuken",
   "editor.cards.help.width": "Op een breed scherm; een telefoon toont een paneel van onderen",
   "editor.cards.help.unfold":

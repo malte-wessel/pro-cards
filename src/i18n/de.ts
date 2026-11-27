@@ -104,10 +104,6 @@ const de: Translation = {
   "popup.open": "Öffnen",
   "popup.close": "Schließen",
   "popup.name": "Pop-up",
-  "popup.section_missing": "Kein Abschnitt „{section}“ in diesem Dashboard und dieser Ansicht",
-  "popup.section_generated":
-    "Dieses Dashboard wird von einer Strategie erzeugt: Es hat keine Abschnitte zum Zeigen",
-  "popup.section_unreadable": "Dieses Dashboard konnte nicht gelesen werden",
   "group.stub_title": "Gruppe",
   "sections.stub_title": "Abschnitt",
   "heading.stub_title": "Überschrift",
@@ -775,8 +771,6 @@ const de: Translation = {
   "editor.card.field.attribute": "Attribut",
   "editor.card.field.value": "Wert",
   "editor.card.field.secondary": "Zweite Zeile",
-  "editor.card.field.aside": "Zweiter Wert",
-  "editor.card.field.aside_attribute": "Attribut des zweiten Werts",
   "editor.card.field.unit": "Maßeinheit",
   "editor.card.field.decimals": "Nachkommastellen",
   "editor.card.field.format": "Format",
@@ -787,7 +781,6 @@ const de: Translation = {
   "editor.card.field.max": "Bis (max)",
   "editor.card.field.show_name": "Namen anzeigen",
   "editor.card.field.show_secondary": "Zweite Zeile anzeigen",
-  "editor.card.field.show_aside": "Zweiten Wert anzeigen",
   "editor.card.field.show_value": "Wert anzeigen",
   "editor.card.field.icon_thing": "Symbol zeigt",
   "editor.card.field.icon_src": "Bild",
@@ -896,9 +889,6 @@ const de: Translation = {
   "editor.card.range.empty": "Leer: {value}",
   "editor.card.range.inverted": "Muss über „Von“ liegen, sonst füllt sich nichts",
   "editor.card.help.prefix": "Vor dem Wert, etwa ~ oder +",
-  "editor.card.help.aside": "Ein weiterer Wert neben dem Wert, kleiner (ein Ziel, eine Vorhersage)",
-  "editor.card.help.aside_attribute":
-    "Leer: sein Zustand; ohne Entität des zweiten Werts das Attribut der Karte",
   "editor.card.help.icon_ring_entity": "Eine andere Entität für den Ring; leer: der Wert der Karte",
   "editor.card.help.suffix": "Nach dem Wert",
   "editor.card.help.found": "Am Gerät gefunden: {entity}",
@@ -1014,16 +1004,6 @@ const de: Translation = {
   "editor.cards.width.full": "Volle Breite",
   "editor.cards.popup_height.auto": "So hoch wie seine Karten",
   "editor.cards.popup_height.full": "Volle Höhe",
-  "editor.cards.section_source": "Abschnitt eines Dashboards",
-  "editor.cards.field.section_dashboard": "Dashboard",
-  "editor.cards.field.section_view": "Ansicht",
-  "editor.cards.field.section_title": "Abschnitt",
-  "editor.cards.help.section_dashboard":
-    "Seine Adresse, z. B. dashboard-raeume. Leer: dieses Dashboard",
-  "editor.cards.help.section_view":
-    "Ihr Pfad oder ihre Nummer, ab 0. Leer: diese Ansicht, sonst die erste",
-  "editor.cards.help.section_title":
-    "Die Überschrift des Abschnitts. Seine Karten kommen vor den eigenen des Pop-ups",
   "editor.cards.help.hash":
     "Eine Navigieren-Aktion zu #kueche öffnet das Pop-up mit dem Hash kueche",
   "editor.cards.help.width": "Auf einem breiten Bildschirm; ein Handy zeigt ein Blatt von unten",

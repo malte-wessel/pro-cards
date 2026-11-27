@@ -104,10 +104,6 @@ const sv: Translation = {
   "popup.open": "Öppna",
   "popup.close": "Stäng",
   "popup.name": "Popup-fönster",
-  "popup.section_missing": "Ingen sektion ”{section}” på den instrumentpanelen och vyn",
-  "popup.section_generated":
-    "Den instrumentpanelen skapas av en strategi: den har inga sektioner att visa",
-  "popup.section_unreadable": "Den instrumentpanelen kunde inte läsas",
   "group.stub_title": "Grupp",
   "sections.stub_title": "Sektion",
   "heading.stub_title": "Rubrik",
@@ -774,8 +770,6 @@ const sv: Translation = {
   "editor.card.field.attribute": "Attribut",
   "editor.card.field.value": "Värde",
   "editor.card.field.secondary": "Andra raden",
-  "editor.card.field.aside": "Andra värde",
-  "editor.card.field.aside_attribute": "Andra värdets attribut",
   "editor.card.field.unit": "Enhet",
   "editor.card.field.decimals": "Decimaler",
   "editor.card.field.format": "Format",
@@ -786,7 +780,6 @@ const sv: Translation = {
   "editor.card.field.max": "Till (max)",
   "editor.card.field.show_name": "Visa namn",
   "editor.card.field.show_secondary": "Visa sekundär rad",
-  "editor.card.field.show_aside": "Visa andra värde",
   "editor.card.field.show_value": "Visa värde",
   "editor.card.field.icon_thing": "Ikonen visar",
   "editor.card.field.icon_src": "Bild",
@@ -895,9 +888,6 @@ const sv: Translation = {
   "editor.card.range.empty": "Tomt: {value}",
   "editor.card.range.inverted": "Måste vara över ”Från”, annars fylls inget",
   "editor.card.help.prefix": "Före värdet, som ~ eller +",
-  "editor.card.help.aside": "Ett annat värde bredvid värdet, mindre (ett mål, en prognos)",
-  "editor.card.help.aside_attribute":
-    "Tomt: dess tillstånd; utan entitet för andra värdet, kortets attribut",
   "editor.card.help.icon_ring_entity": "En annan entitet för ringen; tom: kortets värde",
   "editor.card.help.suffix": "Efter värdet",
   "editor.card.help.found": "Hittades på enheten: {entity}",
@@ -1009,16 +999,6 @@ const sv: Translation = {
   "editor.cards.width.full": "Full bredd",
   "editor.cards.popup_height.auto": "Lika hög som korten",
   "editor.cards.popup_height.full": "Full höjd",
-  "editor.cards.section_source": "Sektion från en instrumentpanel",
-  "editor.cards.field.section_dashboard": "Instrumentpanel",
-  "editor.cards.field.section_view": "Vy",
-  "editor.cards.field.section_title": "Sektion",
-  "editor.cards.help.section_dashboard":
-    "Dess adress, t.ex. dashboard-rum. Tomt: den här instrumentpanelen",
-  "editor.cards.help.section_view":
-    "Dess sökväg eller nummer, från 0. Tomt: den här vyn, annars den första",
-  "editor.cards.help.section_title":
-    "Sektionens rubrik. Dess kort kommer före popup-fönstrets egna",
   "editor.cards.help.hash": "En navigera-åtgärd till #kok öppnar popup-fönstret med hashen kok",
   "editor.cards.help.width": "På en bred skärm; en telefon visar ett blad nerifrån",
   "editor.cards.help.unfold":

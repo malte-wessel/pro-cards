@@ -88,21 +88,8 @@ const STYLE_POSTER = `
   .pmain > .end { align-self: center; }
   .ptext { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .ptext > :is(.pname, .secondary) { contain: inline-size; }
-  .pvalue { display: flex; align-items: baseline; gap: 0 12px; min-width: 0; }
+  .pvalue { display: flex; min-width: 0; }
   .pvalue > .big { flex: 0 1 auto; }
-  /* the second value (aside): its number a step above the value's unit, its own unit a step below,
-     in the secondary colour; it never shrinks, the poster moves it under the value or leaves it
-     out first (PosterCard._fitValue) */
-  .paside { flex: none; display: flex; align-items: baseline; gap: 3px; color: var(--secondary-text-color); white-space: nowrap; }
-  .paside b { font-size: ${fs(20)}; line-height: ${lh(20, 24)}; font-weight: ${fw("normal")}; font-variant-numeric: tabular-nums; }
-  .paside span { font-size: ${fs(13)}; }
-  .paside ha-icon { align-self: center; --mdc-icon-size: 18px; }
-  /* under the value it is the line under it: that line's size and gap, so the card keeps its
-     height */
-  .pvalue.aside-under { flex-wrap: wrap; }
-  .pvalue.aside-under > .paside { flex-basis: 100%; margin-top: 4px; }
-  .pvalue.aside-under > .paside :is(b, span) { font-size: ${fs(12)}; line-height: ${lh(12, 16)}; }
-  .paside.pfit-out { display: none; }
   .pmain > .end { min-width: 0; max-width: 100%; }
   /* the place the card found for its size (PosterCard._placeControls) holds: beside, a wider value
      is drawn smaller; under, a narrower one leaves the controls where they are */
